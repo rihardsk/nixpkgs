@@ -23752,4 +23752,19 @@ in
     stdenv = crossLibcStdenv;
   };
 
+  hello-cpp = stdenv.lib.makeOverridable stdenv.mkDerivation {
+    name = "hello-cpp-2";
+    src = ~/Dev/hello-cpp;
+
+    makeFlags = [];
+
+    installPhase = ''
+      runHook preInstall
+
+      mkdir -p $out/bin/
+      cp hello-cpp $out/bin/hello-cpp
+
+      runHook postInstall
+    '';
+  };
 }
