@@ -19,6 +19,7 @@
 
 { stdenv, lib
 , buildPackages
+, runtimeShell
 , fetchurl ? null
 , linuxHeaders ? null
 , gd ? null, libpng ? null
@@ -216,6 +217,6 @@ stdenv.mkDerivation ({
 
   # To avoid a dependency on the build system 'bash'.
   preFixup = ''
-    rm -f $bin/bin/{ldd,tzselect,catchsegv,xtrace}
+    rm -f $bin/bin/{ldd,tzselect,catchsegv,xtrace,sotruss}
   '';
 })
