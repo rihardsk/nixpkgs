@@ -148,10 +148,17 @@ in
 
             start=''${gap}M, size=$firmwareSizeBlocks, type=b
             start=$((gap + ${toString config.sdImage.firmwareSize}))M, type=83, bootable
-        EOF
+EOF
 
         # Copy the rootfs into the SD image
+        echo "eval..."
         eval $(partx $img -o START,SECTORS --nr 2 --pairs)
+
+        echo "dd if=${pkgs.ubootTeres}/u-boot-sunxi-with-spl.bin of=$img bs=1024 seek=8 oflag=sync"
+        dd if=${pkgs.ubootTeres}/u-boot-sunxi-with-spl.bin of=$img bs=1024 seek=8 oflag=sync
+
+        echo "dd conv=notrunc if=${rootfsImage} of=$img seek=$START count=$SECTORS"
+        fsck.ext4 -vn ${rootfsImage}
         dd conv=notrunc if=${rootfsImage} of=$img seek=$START count=$SECTORS
 
         # Create a FAT32 /boot/firmware partition of suitable size into firmware_part.img

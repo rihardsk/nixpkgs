@@ -16281,6 +16281,7 @@ in
     ubootRaspberryPiZero
     ubootSheevaplug
     ubootSopine
+    ubootTeres
     ubootUtilite
     ubootWandboard
     ;

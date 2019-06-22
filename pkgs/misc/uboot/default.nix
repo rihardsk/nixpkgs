@@ -4,7 +4,7 @@
 }:
 
 let
-  buildUBoot = { version ? "2019.04"
+  buildUBoot = { version ? "2019.07-rc4"
             , filesToInstall
             , installDir ? "$out"
             , defconfig
@@ -20,7 +20,7 @@ let
 
     src = fetchurl {
       url = "ftp://ftp.denx.de/pub/u-boot/u-boot-${version}.tar.bz2";
-      sha256 = "1vwv4bgbl7fjcm073zrphn17hnz5h5h778f88ivdsgbb2lnpgdvn";
+      sha256 = "0x3jwa0dl6ld89jqx75njj9222agvj101jwwzps2jyzvskjkmkfi";
     };
 
     patches = [
@@ -204,6 +204,13 @@ in rec {
 
   ubootPinebook = buildUBoot rec {
     defconfig = "pinebook_defconfig";
+    extraMeta.platforms = ["aarch64-linux"];
+    BL31 = "${armTrustedFirmwareAllwinner}/bl31.bin";
+    filesToInstall = ["u-boot-sunxi-with-spl.bin"];
+  };
+
+  ubootTeres = buildUBoot rec {
+    defconfig = "teres_i_defconfig";
     extraMeta.platforms = ["aarch64-linux"];
     BL31 = "${armTrustedFirmwareAllwinner}/bl31.bin";
     filesToInstall = ["u-boot-sunxi-with-spl.bin"];
