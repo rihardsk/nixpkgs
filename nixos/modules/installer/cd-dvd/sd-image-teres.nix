@@ -21,7 +21,7 @@ in
 
   boot.consoleLogLevel = lib.mkDefault 7;
   nixpkgs.config.packageOverrides = pkgs: {
-    linux_4_19 = pkgs.linux_pine64.override {
+    linux_sunxi = pkgs.linux_sunxi.override {
         extraConfig = ''
           SUNXI_CODEC y
           SUNXI_I2S y
@@ -32,7 +32,7 @@ in
         '';
     };
   };
-  boot.kernelPackages = pkgs.linuxPackages_4_19;
+  boot.kernelPackages = pkgs.linuxPackages_sunxi;
   boot.kernelParams = ["console=tty0" "console=ttyS0,115200n8" "no_console_suspend"];
 
   sdImage = {

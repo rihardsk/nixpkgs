@@ -23,6 +23,8 @@ rec {
 
   cpu-cgroup-v2 = import ./cpu-cgroup-v2-patches;
 
+  sunxi-next = import ./sunxi-next-patches;
+
   tag_hardened = rec {
     name = "tag-hardened";
     patch = ./tag-hardened.patch;
