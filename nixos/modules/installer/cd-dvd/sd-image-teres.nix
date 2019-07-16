@@ -29,6 +29,7 @@ in
           8723CS y
           R8152 y
           HALL y
+          WLAN_VENDOR_XRADIO n
         '';
     };
   };
