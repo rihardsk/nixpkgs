@@ -283,8 +283,7 @@ stdenv.mkDerivation ((drvAttrs config stdenv.hostPlatform.platform kernelPatches
   enableParallelBuilding = true;
 
   depsBuildBuild = [ buildPackages.stdenv.cc ];
-  nativeBuildInputs = [ perl bc nettools openssl rsync gmp libmpc mpfr ]
-      ++ optional  (stdenv.hostPlatform.platform.kernelTarget == "uImage") buildPackages.ubootTools
+  nativeBuildInputs = [ perl bc nettools openssl rsync gmp libmpc mpfr buildPackages.ubootTools ]
       ++ optional  (stdenv.lib.versionAtLeast version "4.14") libelf
       ++ optional  (stdenv.lib.versionAtLeast version "4.15") utillinux
       ++ optionals (stdenv.lib.versionAtLeast version "4.16") [ bison flex ]
