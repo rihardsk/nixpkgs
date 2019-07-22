@@ -25,6 +25,8 @@ rec {
 
   sunxi-next = import ./sunxi-next-patches;
 
+  anx6345 = import ./anx6345-patches;
+
   tag_hardened = rec {
     name = "tag-hardened";
     patch = ./tag-hardened.patch;

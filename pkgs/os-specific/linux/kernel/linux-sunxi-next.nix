@@ -3,15 +3,15 @@
 with stdenv.lib;
 
 buildLinux (args // rec {
-  version = "4.19.56";
-  modDirVersion = "4.19.56";
+  version = "5.2.0";
+  modDirVersion = version;
 
-  extraMeta.branch = "sunxi-next";
+  extraMeta.branch = "sunxi64-5.2";
 
   src = fetchFromGitHub {
-    owner = "linux-sunxi";
-    repo = "linux-sunxi";
-    rev = "HEAD";
-    sha256 = "1xfirljlharr9p6d6v66bzwmg4vgixdlqq009p9gi5qm8l5bra03";
+    owner = "anarsoul";
+    repo = "linux-2.6";
+    rev = "3c0ea3bedc07d93945ddc50e8bac7bdae30df08a";
+    sha256 = "12fdn42r1qxi20pdgjz42w1l0cklmm9azfizmwq48q52ifib46zb";
   };
 } // (args.argsOverride or {}))
