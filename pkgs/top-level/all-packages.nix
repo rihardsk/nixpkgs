@@ -15539,6 +15539,14 @@ in
       ];
   };
 
+  linux_teres = callPackage ../os-specific/linux/kernel/linux-teres.nix {
+    kernelPatches =
+      [ kernelPatches.bridge_stp_helper
+        kernelPatches.modinst_arg_list_too_long
+        kernelPatches.aarch64_fix_cflags_crc32
+      ];
+  };
+
   linux_4_4 = callPackage ../os-specific/linux/kernel/linux-4.4.nix {
     kernelPatches =
       [ kernelPatches.bridge_stp_helper
@@ -15794,6 +15802,7 @@ in
   linuxPackages_rpi = linuxPackagesFor pkgs.linux_rpi;
   linuxPackages_sunxi = linuxPackagesFor pkgs.linux_sunxi;
   linuxPackages_sunxi_next = linuxPackagesFor pkgs.linux_sunxi_next;
+  linuxPackages_teres = linuxPackagesFor pkgs.linux_teres;
   linuxPackages_4_4 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_4_4);
   linuxPackages_4_9 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_4_9);
   linuxPackages_4_14 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_4_14);
