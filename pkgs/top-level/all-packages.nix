@@ -16069,6 +16069,7 @@ in
   qemu_test = lowPrio (qemu.override { hostCpuOnly = true; nixosTestRunner = true; });
 
   firmwareLinuxNonfree = callPackage ../os-specific/linux/firmware/firmware-linux-nonfree { };
+  armbian-firmware = callPackage ../os-specific/linux/firmware/armbian {};
 
   radeontools = callPackage ../os-specific/linux/radeontools { };
 
