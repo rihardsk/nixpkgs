@@ -21,6 +21,11 @@ rec {
       patch = ./genksyms-fix-segfault.patch;
     };
 
+  aarch64_fix_cflags_crc32 =
+    { name = "aarch64-fix-cflags-crc32";
+      patch = ./aarch64-fix-cflags-crc32.patch;
+    };
+
   cpu-cgroup-v2 = import ./cpu-cgroup-v2-patches;
 
   sunxi-next = import ./sunxi-next-patches;
