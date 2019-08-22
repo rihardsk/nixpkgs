@@ -144,7 +144,7 @@ let
       NF_TABLES_IPV4              = whenAtLeast "4.17" yes;
       NF_TABLES_ARP               = whenAtLeast "4.17" yes;
       NF_TABLES_IPV6              = whenAtLeast "4.17" yes;
-      NF_TABLES_BRIDGE            = whenAtLeast "4.17" yes;
+#      NF_TABLES_BRIDGE            = whenAtLeast "4.17" yes;
     };
 
     wireless = {
