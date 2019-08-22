@@ -15650,6 +15650,19 @@ in
     ];
   };
 
+  linux_rockpro64 = callPackage ../os-specific/linux/kernel/linux-rockpro64.nix {
+    kernelPatches =
+      [ kernelPatches.bridge_stp_helper
+        kernelPatches.modinst_arg_list_too_long
+      ];
+  };
+
+  linux_rockpro64_latest = callPackage ../os-specific/linux/kernel/linux-5.3-rockpro64.nix {
+    kernelPatches =
+      [ kernelPatches.bridge_stp_helper
+      ];
+  };
+
   linux_4_4 = callPackage ../os-specific/linux/kernel/linux-4.4.nix {
     kernelPatches =
       [ kernelPatches.bridge_stp_helper
@@ -15890,6 +15903,8 @@ in
   linuxPackages_latest = linuxPackagesFor pkgs.linux_latest;
   linuxPackages_mptcp = linuxPackagesFor pkgs.linux_mptcp;
   linuxPackages_rpi = linuxPackagesFor pkgs.linux_rpi;
+  linuxPackages_rockpro64 = linuxPackagesFor pkgs.linux_rockpro64;
+  linuxPackages_rockpro64_latest = linuxPackagesFor pkgs.linux_rockpro64_latest;
   linuxPackages_4_4 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_4_4);
   linuxPackages_4_9 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_4_9);
   linuxPackages_4_14 = recurseIntoAttrs (linuxPackagesFor pkgs.linux_4_14);
