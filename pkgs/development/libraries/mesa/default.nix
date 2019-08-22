@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchurl, fetchpatch
+{ stdenv, lib, fetchgit, fetchpatch
 , pkgconfig, intltool, ninja, meson
 , file, flex, bison, expat, libdrm, xorg, wayland, wayland-protocols, openssl
 , llvmPackages, libffi, libomxil-bellagio, libva-minimal
@@ -35,14 +35,10 @@ stdenv.mkDerivation rec {
   pname = "mesa";
   inherit version;
 
-  src =  fetchurl {
-    urls = [
-      "ftp://ftp.freedesktop.org/pub/mesa/mesa-${version}.tar.xz"
-      "ftp://ftp.freedesktop.org/pub/mesa/${version}/mesa-${version}.tar.xz"
-      "ftp://ftp.freedesktop.org/pub/mesa/older-versions/${branch}.x/${version}/mesa-${version}.tar.xz"
-      "https://mesa.freedesktop.org/archive/mesa-${version}.tar.xz"
-    ];
-    sha256 = "1q5p4mw7zrklwx1is09knnb762zzk33xwhwp99fw25ax4ar60m44";
+  src = fetchgit {
+    url = "https://gitlab.freedesktop.org/mesa/mesa.git";
+    rev = "74a7e3ed3b297f441b406ff62ef9ba504ba3b06c";
+    sha256 = "1lrnfgrs3qpg1awqsw15vaj70fq5z8yksfzr0cfqnvif8ia8j78m";
   };
 
   prePatch = "patchShebangs .";
@@ -167,7 +163,7 @@ stdenv.mkDerivation rec {
     substituteInPlace "$dev/lib/pkgconfig/dri.pc" --replace "$drivers" "${libglvnd.driverLink}"
 
     # remove pkgconfig files for GL/EGL; they are provided by libGL.
-    rm $dev/lib/pkgconfig/{gl,egl}.pc
+    rm $dev/lib/pkgconfig/gl.pc
 
     # Update search path used by pkg-config
     for pc in $dev/lib/pkgconfig/{d3d,dri,xatracker}.pc; do

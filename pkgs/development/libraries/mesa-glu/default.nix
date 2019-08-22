@@ -1,18 +1,23 @@
-{ stdenv, fetchurl, pkgconfig, libGL, ApplicationServices }:
+{ stdenv, fetchgit, pkgconfig, libGL, ApplicationServices, autoconf, automake, libtool }:
 
 stdenv.mkDerivation rec {
   name = "glu-${version}";
-  version = "9.0.0";
+  version = "9.0.1";
 
-  src = fetchurl {
-    url = "ftp://ftp.freedesktop.org/pub/mesa/glu/${name}.tar.bz2";
-    sha256 = "04nzlil3a6fifcmb95iix3yl8mbxdl66b99s62yzq8m7g79x0yhz";
+  src = fetchgit {
+    url = "https://gitlab.freedesktop.org/mesa/glu.git";
+    rev = "dd4e18eb7557a31a3c8318d6612801329877c745";
+    sha256 = "12ds0l9lasabzkqfm65ihhjc0zq9w2rgz2ijkcfr3njgpzjs367n";
   };
   postPatch = ''
     echo 'Cflags: -I''${includedir}' >> glu.pc.in
   '';
 
-  nativeBuildInputs = [ pkgconfig ];
+  preConfigure = ''
+    ./autogen.sh
+  '';
+
+  nativeBuildInputs = [ pkgconfig autoconf automake libtool ];
   propagatedBuildInputs = [ libGL ]
     ++ stdenv.lib.optional stdenv.isDarwin ApplicationServices;
 

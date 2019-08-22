@@ -5,8 +5,8 @@ stdenv.mkDerivation rec {
 
   src = fetchgit {
     url = git://anongit.freedesktop.org/mesa/kmscube;
-    rev = "9dcce71e603616ee7a54707e932f962cdf8fb20a";
-    sha256 = "1q5b5yvyfj3127385mp1bfmcbnpnbdswdk8gspp7g4541xk4k933";
+    rev = "f632b23a528ed6b4e1fddd774db005c30ab65568";
+    sha256 = "0rr58h8g1nj94ng13hdd6nn44155xg48xafyi0v843lvh09k88vh";
   };
 
   nativeBuildInputs = [ autoreconfHook pkgconfig ];
