@@ -21,7 +21,7 @@ in
 
   boot.consoleLogLevel = lib.mkDefault 7;
   boot.kernelPackages = pkgs.linuxPackages_rockpro64_latest;
-  boot.kernelParams = [ "console=uart8250,mmio32,0xff1a0000" ];
+  boot.kernelParams = [ "console=uart8250,mmio32,0xff1a0000" "video=eDP-1:1920x1080@60" ];
 
   sdImage = {
     populateFirmwareCommands = let
@@ -30,7 +30,7 @@ in
       '';
       in ''
 #        echo "dd if=${pkgs.ubootRockPro64}/idbloader.img of=$img bs=512 seek=64 oflag=sync"
-#        dd if=${pkgs.ubootRockPro64}/idbloader.img of=$img bs=512 seek=64 oflag=sync
+        dd if=${pkgs.ubootRockPro64}/idbloader.img of=$img bs=512 seek=64 oflag=sync conv=notrunc
         cp ${configTxt} firmware/config.txt
       '';
     populateRootCommands = ''

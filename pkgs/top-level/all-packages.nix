@@ -15657,7 +15657,7 @@ in
       ];
   };
 
-  linux_rockpro64_latest = callPackage ../os-specific/linux/kernel/linux-5.3-rockpro64.nix {
+  linux_rockpro64_latest = callPackage ../os-specific/linux/kernel/linux-latest-rockpro64.nix {
     kernelPatches =
       [ kernelPatches.bridge_stp_helper
       ];
