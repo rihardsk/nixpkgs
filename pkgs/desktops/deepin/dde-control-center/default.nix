@@ -7,15 +7,14 @@
 }:
 
 mkDerivation rec {
-  name = "${pname}-${version}";
   pname = "dde-control-center";
-  version = "4.10.11";
+  version = "5.0.0";
 
   src = fetchFromGitHub {
     owner = "linuxdeepin";
     repo = pname;
     rev = version;
-    sha256 = "1ip8wjwf0n9q8xnqymzh8lz0j5gcnns976n291np6k5kdh2wqhr5";
+    sha256 = "10bx8bpvi3ib32a3l4nyb1j0iq3bch8jm9wfm6d5v0ym1zb92x3b";
   };
 
   nativeBuildInputs = [
@@ -94,13 +93,21 @@ mkDerivation rec {
       --replace "/bin/systemctl" "${systemd}/bin/systemctl"
   '';
 
+  dontWrapQtApps = true;
+
+  preFixup = ''
+    gappsWrapperArgs+=(
+      "''${qtWrapperArgs[@]}"
+    )
+  '';
+
   postFixup = ''
     # debuging
     searchForUnresolvedDLL $out
     searchHardCodedPaths $out
   '';
 
-  passthru.updateScript = deepin.updateScript { inherit name; };
+  passthru.updateScript = deepin.updateScript { name = "${pname}-${version}"; };
 
   meta = with stdenv.lib; {
     description = "Control panel of Deepin Desktop Environment";

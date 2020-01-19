@@ -1,8 +1,8 @@
 { stdenv, fetchFromGitHub, autoreconfHook, ncurses5 }:
 
 stdenv.mkDerivation rec {
+  pname = "angband";
   version = "4.2.0";
-  name = "angband-${version}";
 
   src = fetchFromGitHub {
     owner = "angband";
@@ -13,7 +13,7 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ autoreconfHook ];
   buildInputs = [ ncurses5 ];
-  installFlags = "bindir=$(out)/bin";
+  installFlags = [ "bindir=$(out)/bin" ];
 
   meta = with stdenv.lib; {
     homepage = http://rephial.org/;

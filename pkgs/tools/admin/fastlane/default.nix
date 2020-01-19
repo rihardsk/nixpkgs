@@ -1,21 +1,20 @@
 { stdenv, bundlerEnv, ruby, bundlerUpdateScript, makeWrapper }:
 
 stdenv.mkDerivation rec {
-  name = "${pname}-${version}";
   pname = "fastlane";
   version = (import ./gemset.nix).fastlane.version;
 
   nativeBuildInputs = [ makeWrapper ];
 
-  env = bundlerEnv {
-    name = "${name}-gems";
-    inherit pname ruby;
-    gemdir = ./.;
-  };
-
   phases = [ "installPhase" ];
 
-  installPhase = ''
+  installPhase = let
+    env = bundlerEnv {
+      name = "${pname}-${version}-gems";
+      inherit pname ruby;
+      gemdir = ./.;
+    };
+  in ''
     mkdir -p $out/bin
     makeWrapper ${env}/bin/fastlane $out/bin/fastlane \
      --set FASTLANE_SKIP_UPDATE_CHECK 1

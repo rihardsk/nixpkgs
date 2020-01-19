@@ -1,7 +1,7 @@
 { stdenv, fetchFromGitHub }:
 
 stdenv.mkDerivation rec {
-  name = "lmdb-${version}";
+  pname = "lmdb";
   version = "0.9.24";
 
   src = fetchFromGitHub {
@@ -14,7 +14,7 @@ stdenv.mkDerivation rec {
   postUnpack = "sourceRoot=\${sourceRoot}/libraries/liblmdb";
 
   patches = [ ./hardcoded-compiler.patch ];
-  patchFlags = "-p3";
+  patchFlags = [ "-p3" ];
 
   outputs = [ "bin" "out" "dev" ];
 

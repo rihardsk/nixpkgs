@@ -4,33 +4,31 @@
 
 with stdenv.lib;
 stdenv.mkDerivation rec {
-  name = "sysdig-${version}";
-  version = "0.26.2";
+  pname = "sysdig";
+  version = "0.26.5";
 
   src = fetchFromGitHub {
     owner = "draios";
     repo = "sysdig";
     rev = version;
-    sha256 = "1a74cvvy3lhilibc3lzcsvs6pwrdvdx2580qgckp1lrra9gf5hga";
+    sha256 = "145mwg6izrpi4r1qrygi4yb7qd68g4k64i3qmamk0671wxhjqi3c";
   };
 
   nativeBuildInputs = [ cmake perl ];
   buildInputs = [
     zlib luajit ncurses jsoncpp libb64 openssl curl jq gcc elfutils tbb c-ares protobuf grpc
-  ] ++ optional (kernel != null) kernel.moduleBuildDependencies;
+  ] ++ optionals (kernel != null) kernel.moduleBuildDependencies;
 
   hardeningDisable = [ "pic" ];
 
   cmakeFlags = [
     "-DUSE_BUNDLED_DEPS=OFF"
     "-DSYSDIG_VERSION=${version}"
+    "-DCREATE_TEST_TARGETS=OFF"
   ] ++ optional (kernel == null) "-DBUILD_DRIVER=OFF";
 
   # needed since luajit-2.1.0-beta3
-  NIX_CFLAGS_COMPILE = [
-    "-DluaL_reg=luaL_Reg"
-    "-DluaL_getn(L,i)=((int)lua_objlen(L,i))"
-  ];
+  NIX_CFLAGS_COMPILE = "-DluaL_reg=luaL_Reg -DluaL_getn(L,i)=((int)lua_objlen(L,i))";
 
   preConfigure = ''
     cmakeFlagsArray+=(-DCMAKE_EXE_LINKER_FLAGS="-ltbb -lcurl")

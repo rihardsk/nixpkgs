@@ -64,7 +64,7 @@ let
       $wgScriptPath = "";
 
       ## The protocol and server name to use in fully-qualified URLs
-      $wgServer = "${if cfg.virtualHost.enableSSL then "https" else "http"}://${cfg.virtualHost.hostName}";
+      $wgServer = "${if cfg.virtualHost.addSSL || cfg.virtualHost.forceSSL || cfg.virtualHost.onlySSL then "https" else "http"}://${cfg.virtualHost.hostName}";
 
       ## The URL path to static resources (images, scripts, etc.)
       $wgResourceBasePath = $wgScriptPath;
@@ -290,19 +290,13 @@ in
       };
 
       virtualHost = mkOption {
-        type = types.submodule ({
-          options = import ../web-servers/apache-httpd/per-server-options.nix {
-            inherit lib;
-            forMainServer = false;
-          };
-        });
+        type = types.submodule (import ../web-servers/apache-httpd/per-server-options.nix);
         example = literalExample ''
           {
             hostName = "mediawiki.example.org";
-            enableSSL = true;
             adminAddr = "webmaster@example.org";
-            sslServerCert = "/var/lib/acme/mediawiki.example.org/full.pem";
-            sslServerKey = "/var/lib/acme/mediawiki.example.org/key.pem";
+            forceSSL = true;
+            enableACME = true;
           }
         '';
         description = ''
@@ -312,17 +306,17 @@ in
       };
 
       poolConfig = mkOption {
-        type = types.lines;
-        default = ''
-          pm = dynamic
-          pm.max_children = 32
-          pm.start_servers = 2
-          pm.min_spare_servers = 2
-          pm.max_spare_servers = 4
-          pm.max_requests = 500
-        '';
+        type = with types; attrsOf (oneOf [ str int bool ]);
+        default = {
+          "pm" = "dynamic";
+          "pm.max_children" = 32;
+          "pm.start_servers" = 2;
+          "pm.min_spare_servers" = 2;
+          "pm.max_spare_servers" = 4;
+          "pm.max_requests" = 500;
+        };
         description = ''
-          Options for MediaWiki's PHP pool. See the documentation on <literal>php-fpm.conf</literal>
+          Options for the MediaWiki PHP pool. See the documentation on <literal>php-fpm.conf</literal>
           for details on configuration directives.
         '';
       };
@@ -379,46 +373,38 @@ in
     };
 
     services.phpfpm.pools.mediawiki = {
-      listen = "/run/phpfpm/mediawiki.sock";
-      extraConfig = ''
-        listen.owner = ${config.services.httpd.user}
-        listen.group = ${config.services.httpd.group}
-        user = ${user}
-        group = ${group}
-
-        env[MEDIAWIKI_CONFIG] = ${mediawikiConfig}
-
-        ${cfg.poolConfig}
-      '';
+      inherit user group;
+      phpEnv.MEDIAWIKI_CONFIG = "${mediawikiConfig}";
+      settings = {
+        "listen.owner" = config.services.httpd.user;
+        "listen.group" = config.services.httpd.group;
+      } // cfg.poolConfig;
     };
 
     services.httpd = {
       enable = true;
-      adminAddr = mkDefault cfg.virtualHost.adminAddr;
       extraModules = [ "proxy_fcgi" ];
-      virtualHosts = [ (mkMerge [
-        cfg.virtualHost {
-          documentRoot = mkForce "${pkg}/share/mediawiki";
-          extraConfig = ''
-            <Directory "${pkg}/share/mediawiki">
-              <FilesMatch "\.php$">
-                <If "-f %{REQUEST_FILENAME}">
-                  SetHandler "proxy:unix:${fpm.listen}|fcgi://localhost/"
-                </If>
-              </FilesMatch>
+      virtualHosts.${cfg.virtualHost.hostName} = mkMerge [ cfg.virtualHost {
+        documentRoot = mkForce "${pkg}/share/mediawiki";
+        extraConfig = ''
+          <Directory "${pkg}/share/mediawiki">
+            <FilesMatch "\.php$">
+              <If "-f %{REQUEST_FILENAME}">
+                SetHandler "proxy:unix:${fpm.socket}|fcgi://localhost/"
+              </If>
+            </FilesMatch>
 
-              Require all granted
-              DirectoryIndex index.php
-              AllowOverride All
-            </Directory>
-          '' + optionalString (cfg.uploadsDir != null) ''
-            Alias "/images" "${cfg.uploadsDir}"
-            <Directory "${cfg.uploadsDir}">
-              Require all granted
-            </Directory>
-          '';
-        }
-      ]) ];
+            Require all granted
+            DirectoryIndex index.php
+            AllowOverride All
+          </Directory>
+        '' + optionalString (cfg.uploadsDir != null) ''
+          Alias "/images" "${cfg.uploadsDir}"
+          <Directory "${cfg.uploadsDir}">
+            Require all granted
+          </Directory>
+        '';
+      } ];
     };
 
     systemd.tmpfiles.rules = [
@@ -466,7 +452,10 @@ in
 
     systemd.services.httpd.after = optional (cfg.database.createLocally && cfg.database.type == "mysql") "mysql.service";
 
-    users.users.${user}.group = group;
+    users.users.${user} = {
+      group = group;
+      isSystemUser = true;
+    };
 
     environment.systemPackages = [ mediawikiScripts ];
   };

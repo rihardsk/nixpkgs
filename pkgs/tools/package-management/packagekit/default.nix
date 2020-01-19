@@ -1,5 +1,5 @@
 { stdenv, fetchFromGitHub, lib
-, intltool, glib, pkgconfig, polkit, python, sqlite
+, intltool, glib, pkgconfig, polkit, python3, sqlite
 , gobject-introspection, vala, gtk-doc, autoreconfHook, autoconf-archive
 # TODO: set enableNixBackend to true, as soon as it builds
 , nix, enableNixBackend ? false, boost
@@ -8,7 +8,7 @@
 , enableSystemd ? stdenv.isLinux, systemd }:
 
 stdenv.mkDerivation rec {
-  name = "packagekit-${version}";
+  pname = "packagekit";
   version = "1.1.12";
 
   outputs = [ "out" "dev" ];
@@ -20,7 +20,7 @@ stdenv.mkDerivation rec {
     sha256 = "02wq3jw3mkdld90irh5vdfd5bri2g1p89mhrmj56kvif1fqak46x";
   };
 
-  buildInputs = [ glib polkit python gobject-introspection ]
+  buildInputs = [ glib polkit python3 gobject-introspection ]
                   ++ lib.optional enableSystemd systemd
                   ++ lib.optional enableBashCompletion bash-completion;
   propagatedBuildInputs = [ sqlite nix boost ];
@@ -39,8 +39,8 @@ stdenv.mkDerivation rec {
     "--disable-offline-update"
     "--localstatedir=/var"
     "--sysconfdir=/etc"
-    "--with-dbus-sys=$(out)/etc/dbus-1/system.d"
-    "--with-systemdsystemunitdir=$(out)/lib/systemd/system/"
+    "--with-dbus-sys=${placeholder "out"}/share/dbus-1/system.d"
+    "--with-systemdsystemunitdir=${placeholder "out"}/lib/systemd/system/"
   ]
   ++ lib.optional enableNixBackend "--enable-nix"
   ++ lib.optional (!enableBashCompletion) "--disable-bash-completion"

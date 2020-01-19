@@ -8,7 +8,7 @@
 , galliumDrivers ? ["auto"]
 , driDrivers ? ["auto"]
 , vulkanDrivers ? ["auto"]
-, eglPlatforms ? [ "x11" ] ++ lib.optionals stdenv.isLinux [ "wayland" "drm" ]
+, eglPlatforms ? [ "x11" "surfaceless" ] ++ lib.optionals stdenv.isLinux [ "wayland" "drm" ]
 , OpenGL, Xplugin
 , withValgrind ? stdenv.hostPlatform.isLinux && !stdenv.hostPlatform.isAarch32, valgrind-light
 }:
@@ -27,11 +27,11 @@
 with stdenv.lib;
 
 let
-  version = "19.1.3";
-  branch  = head (splitString "." version);
+  version = "19.3.1";
+  branch  = versions.major version;
 in
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   pname = "mesa";
   inherit version;
 

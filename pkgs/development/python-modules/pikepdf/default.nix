@@ -22,12 +22,12 @@
 
 buildPythonPackage rec {
   pname = "pikepdf";
-  version = "1.1.0";
+  version = "1.8.2";
   disabled = ! isPy3k;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "14b36r6h3088z2sxp2pqvm171js53hz53mwm1g52iadignjnp0my";
+    sha256 = "1n3fd7i1br1s4f90yismgfcq9ix5kcqfacr7yy0hhhrabkf2sm37";
   };
 
   buildInputs = [
@@ -55,8 +55,11 @@ buildPythonPackage rec {
   propagatedBuildInputs = [ defusedxml lxml ];
 
   postPatch = ''
-    substituteInPlace requirements/test.txt \
-       --replace "pytest >= 3.6.0, < 4.1.0" "pytest >= 4.2.1, < 5"
+    sed -i \
+      -e 's/^pytest .*/pytest/g' \
+      -e 's/^attrs .*/attrs/g' \
+      -e 's/^hypothesis .*/hypothesis/g' \
+      requirements/test.txt
   '';
 
   preBuild = ''
@@ -70,4 +73,3 @@ buildPythonPackage rec {
     maintainers = [ maintainers.kiwi ];
   };
 }
-

@@ -32,26 +32,26 @@ let
       sha256 = "1v5kx0xzxzsbs5r4w08rm1lrmjjggnd3ap0sd1my88ds17jzyasd";
     };
   };
-  param = params."${coq.coq-version}";
+  param = params.${coq.coq-version};
 in
 
 stdenv.mkDerivation rec {
 
   name = "coq${coq.coq-version}-equations-${version}";
-  version = "${param.version}";
+  version = param.version;
 
   src = fetchFromGitHub {
     owner = "mattam82";
     repo = "Coq-Equations";
-    rev = "${param.rev}";
-    sha256 = "${param.sha256}";
+    rev = param.rev;
+    sha256 = param.sha256;
   };
 
   buildInputs = with coq.ocamlPackages; [ ocaml camlp5 findlib coq ];
 
   preBuild = "coq_makefile -f _CoqProject -o Makefile";
 
-  installFlags = "COQLIB=$(out)/lib/coq/${coq.coq-version}/";
+  installFlags = [ "COQLIB=$(out)/lib/coq/${coq.coq-version}/" ];
 
   meta = with stdenv.lib; {
     homepage = https://mattam82.github.io/Coq-Equations/;

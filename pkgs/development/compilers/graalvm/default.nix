@@ -1,10 +1,11 @@
-{ stdenv, lib, fetchFromGitHub, fetchurl, fetchzip, fetchgit, mercurial, python27, setJavaClassPath,
+{ stdenv, lib, fetchFromGitHub, fetchurl, fetchzip, fetchgit, mercurial_4, python27, setJavaClassPath,
   zlib, makeWrapper, openjdk, unzip, git, clang, llvm, which, icu, ruby, bzip2, glibc
   # gfortran, readline, bzip2, lzma, pcre, curl, ed, tree ## WIP: fastr deps
 }:
 
 let
   version = "19.1.1";
+  mercurial = mercurial_4;
   truffleMake = ./truffle.make;
   makeMxGitCache = list: out: ''
      mkdir ${out}
@@ -214,7 +215,7 @@ in rec {
 
   jvmci8 = stdenv.mkDerivation rec {
     version = "19.2-b01";
-    name = "jvmci-${version}";
+    pname = "jvmci";
     src = fetchFromGitHub {
       owner  = "graalvm";
       repo   = "graal-jvmci-8";
@@ -242,10 +243,7 @@ in rec {
                   'method->name_and_sig_as_C_string(), p2i(method->native_function()), p2i(entry)' || exit -1
     '';
     hardeningDisable = [ "fortify" ];
-    NIX_CFLAGS_COMPILE = [
-      "-Wno-error=format-overflow" # newly detected by gcc7
-      "-Wno-error=nonnull"
-    ];
+    NIX_CFLAGS_COMPILE = "-Wno-error=format-overflow -Wno-error=nonnull";
     buildPhase = ''
       export MX_ALT_OUTPUT_ROOT=$NIX_BUILD_TOP/mxbuild
       export MX_CACHE_DIR=${makeMxCache jvmci8-mxcache}
@@ -270,7 +268,7 @@ in rec {
       # Set JAVA_HOME automatically.
       mkdir -p $out/nix-support
       cat <<EOF > $out/nix-support/setup-hook
-      if [ -z "\$JAVA_HOME" ]; then export JAVA_HOME=$out; fi
+      if [ -z "\''${JAVA_HOME-}" ]; then export JAVA_HOME=$out; fi
       EOF
     '';
     postFixup = openjdk.postFixup or null;
@@ -280,7 +278,7 @@ in rec {
 
   graalvm8 = stdenv.mkDerivation rec {
     inherit version;
-    name = "graal-${version}";
+    pname = "graal";
     src = fetchFromGitHub {
       owner  = "oracle";
       repo   = "graal";
@@ -293,7 +291,7 @@ in rec {
                     # gfortran readline bzip2 lzma pcre.dev curl ed ## WIP: fastr dependencies
                   ];
     postUnpack = ''
-      cp ${stdenv.cc.cc}/include/c++/${stdenv.cc.cc.version}/stdlib.h \
+      cp ${stdenv.cc.cc}/include/c++/${lib.getVersion stdenv.cc.cc}/stdlib.h \
         $sourceRoot/sulong/projects/com.oracle.truffle.llvm.libraries.bitcode/include
       cp ${truffleMake} $TMP && mv *truffle.make truffle.make
       rm $sourceRoot/truffle/src/libffi/patches/others/0001-Add-mx-bootstrap-Makefile.patch
@@ -318,7 +316,7 @@ in rec {
         --replace 'protected String compilerCommand = "cc";' 'protected String compilerCommand = "${stdenv.cc}/bin/cc";'
       # prevent cyclical imports caused by identical <include> names
       substituteInPlace sulong/projects/com.oracle.truffle.llvm.libraries.bitcode/include/stdlib.h \
-        --replace '# include <cstdlib>' '# include "${stdenv.cc.cc}/include/c++/${stdenv.cc.cc.version}/cstdlib"'
+        --replace '# include <cstdlib>' '# include "${stdenv.cc.cc}/include/c++/${lib.getVersion stdenv.cc.cc}/cstdlib"'
       # dragonegg can't seem to compile on nix, so let's not require it
       substituteInPlace sulong/mx.sulong/suite.py \
         --replace '"requireDragonegg" : True,' '"requireDragonegg" : False,'

@@ -2,22 +2,21 @@
 , git }:
 
 stdenv.mkDerivation rec {
-  name = "${pname}-${version}";
   pname = "gollum";
   # nix-shell -p bundix icu zlib
   version = (import ./gemset.nix).gollum.version;
 
   nativeBuildInputs = [ makeWrapper ];
 
-  env = bundlerEnv {
-    name = "${name}-gems";
-    inherit pname ruby;
-    gemdir = ./.;
-  };
-
   phases = [ "installPhase" ];
 
-  installPhase = ''
+  installPhase = let
+    env = bundlerEnv {
+      name = "${pname}-${version}-gems";
+      inherit pname ruby;
+      gemdir = ./.;
+    };
+  in ''
     mkdir -p $out/bin
     makeWrapper ${env}/bin/gollum $out/bin/gollum \
       --prefix PATH ":" ${stdenv.lib.makeBinPath [ git ]}

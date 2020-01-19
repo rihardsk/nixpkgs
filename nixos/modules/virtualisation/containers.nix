@@ -149,7 +149,7 @@ let
         --setenv PATH="$PATH" \
         ${optionalString cfg.ephemeral "--ephemeral"} \
         ${if cfg.additionalCapabilities != null && cfg.additionalCapabilities != [] then
-          ''--capability="${concatStringsSep " " cfg.additionalCapabilities}"'' else ""
+          ''--capability="${concatStringsSep "," cfg.additionalCapabilities}"'' else ""
         } \
         ${if cfg.tmpfs != null && cfg.tmpfs != [] then
           ''--tmpfs=${concatStringsSep " --tmpfs=" cfg.tmpfs}'' else ""
@@ -225,12 +225,6 @@ let
           fi
           ${concatStringsSep "\n" (mapAttrsToList renderExtraVeth cfg.extraVeths)}
         fi
-
-        # Get the leader PID so that we can signal it in
-        # preStop. We can't use machinectl there because D-Bus
-        # might be shutting down. FIXME: in systemd 219 we can
-        # just signal systemd-nspawn to do a clean shutdown.
-        machinectl show "$INSTANCE" | sed 's/Leader=\(.*\)/\1/;t;d' > "/run/containers/$INSTANCE.pid"
       ''
   );
 
@@ -255,6 +249,10 @@ let
     # unit won't be restarted.
     RestartForceExitStatus = "133";
     SuccessExitStatus = "133";
+
+    # Some containers take long to start
+    # especially when you automatically start many at once
+    TimeoutStartSec = cfg.timeoutStartSec;
 
     Restart = "on-failure";
 
@@ -333,7 +331,7 @@ let
 
   networkOptions = {
     hostBridge = mkOption {
-      type = types.nullOr types.string;
+      type = types.nullOr types.str;
       default = null;
       example = "br0";
       description = ''
@@ -383,7 +381,7 @@ let
     };
 
     hostAddress6 = mkOption {
-      type = types.nullOr types.string;
+      type = types.nullOr types.str;
       default = null;
       example = "fc00::1";
       description = ''
@@ -405,7 +403,7 @@ let
     };
 
     localAddress6 = mkOption {
-      type = types.nullOr types.string;
+      type = types.nullOr types.str;
       default = null;
       example = "fc00::2";
       description = ''
@@ -423,6 +421,7 @@ let
       extraVeths = {};
       additionalCapabilities = [];
       ephemeral = false;
+      timeoutStartSec = "15s";
       allowedDevices = [];
       hostAddress = null;
       hostAddress6 = null;
@@ -560,7 +559,7 @@ in
             };
 
             interfaces = mkOption {
-              type = types.listOf types.string;
+              type = types.listOf types.str;
               default = [];
               example = [ "eth1" "eth2" ];
               description = ''
@@ -594,6 +593,18 @@ in
                 Whether the container is automatically started at boot-time.
               '';
             };
+
+		    timeoutStartSec = mkOption {
+		      type = types.str;
+		      default = "1min";
+		      description = ''
+		        Time for the container to start. In case of a timeout,
+		        the container processes get killed.
+		        See <citerefentry><refentrytitle>systemd.time</refentrytitle>
+		        <manvolnum>7</manvolnum></citerefentry>
+		        for more information about the format.
+		       '';
+		    };
 
             bindMounts = mkOption {
               type = with types; loaOf (submodule bindMountOpts);
@@ -698,21 +709,14 @@ in
 
       postStart = postStartScript dummyConfig;
 
-      preStop =
-        ''
-          pid="$(cat /run/containers/$INSTANCE.pid)"
-          if [ -n "$pid" ]; then
-            kill -RTMIN+4 "$pid"
-          fi
-          rm -f "/run/containers/$INSTANCE.pid"
-        '';
+      preStop = "machinectl poweroff $INSTANCE";
 
       restartIfChanged = false;
 
       serviceConfig = serviceDirectives dummyConfig;
     };
   in {
-    systemd.targets."multi-user".wants = [ "machines.target" ];
+    systemd.targets.multi-user.wants = [ "machines.target" ];
 
     systemd.services = listToAttrs (filter (x: x.value != null) (
       # The generic container template used by imperative containers
@@ -807,5 +811,12 @@ in
     '';
 
     environment.systemPackages = [ pkgs.nixos-container ];
+
+    boot.kernelModules = [
+      "bridge"
+      "macvlan"
+      "tap"
+      "tun"
+    ];
   });
 }

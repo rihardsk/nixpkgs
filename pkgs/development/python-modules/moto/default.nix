@@ -1,4 +1,4 @@
-{ lib, buildPythonPackage, fetchPypi, isPy27
+{ lib, buildPythonPackage, fetchPypi, isPy27, fetchpatch
 , aws-xray-sdk
 , backports_tempfile
 , boto
@@ -22,15 +22,16 @@
 , sure
 , werkzeug
 , xmltodict
+, parameterized
 }:
 
 buildPythonPackage rec {
   pname = "moto";
-  version = "1.3.10";
+  version = "1.3.14";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "0vlq015irqqwdknk1an7qqkg1zjk18c7jd89r7zbxxfwy3bgzwwj";
+    sha256 = "0fm09074qic24h8rw9a0paklygyb7xd0ch4890y4v8lj2pnsxbkr";
   };
 
   postPatch = ''
@@ -61,13 +62,21 @@ buildPythonPackage rec {
     xmltodict
   ] ++ lib.optionals isPy27 [ backports_tempfile ];
 
-  checkInputs = [ boto3 freezegun nose sure ];
+  checkInputs = [ boto3 freezegun nose sure parameterized ];
 
-  checkPhase = ''nosetests -v ./tests/ \
-                  -e test_invoke_function_from_sns \
-                  -e test_invoke_requestresponse_function \
-                  -e test_context_manager \
-                  -e test_decorator_start_and_stop'';
+  checkPhase = ''
+    nosetests -v ./tests/ \
+              -e test_invoke_function_from_sns \
+              -e test_invoke_requestresponse_function \
+              -e test_context_manager \
+              -e test_decorator_start_and_stop \
+              -e test_invoke_event_function \
+              -e test_invoke_function_from_dynamodb \
+              -e test_invoke_function_from_sqs \
+              -e test_invoke_lambda_error \
+              -e test_invoke_async_function \
+              -e test_passthrough_requests
+  '';
 
   meta = with lib; {
     description = "Allows your tests to easily mock out AWS Services";

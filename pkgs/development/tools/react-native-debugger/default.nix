@@ -37,7 +37,7 @@ let
     xorg.libXScrnSaver
   ];
 in stdenv.mkDerivation rec {
-  name = "react-native-debugger-${version}";
+  pname = "react-native-debugger";
   version = "0.9.10";
 
   src = fetchurl {
@@ -78,6 +78,6 @@ in stdenv.mkDerivation rec {
     homepage = https://github.com/jhen0409/react-native-debugger;
     license = licenses.mit;
     description = "The standalone app based on official debugger of React Native, and includes React Inspector / Redux DevTools";
-    maintainers = with maintainers; [ ma27 ];
+    maintainers = with maintainers; [ ];
   };
 }

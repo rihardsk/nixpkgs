@@ -1,7 +1,7 @@
 { stdenv, fetchgit, pkgconfig, libGL, ApplicationServices, autoconf, automake, libtool }:
 
 stdenv.mkDerivation rec {
-  name = "glu-${version}";
+  pname = "glu";
   version = "9.0.1";
 
   src = fetchgit {
@@ -9,9 +9,6 @@ stdenv.mkDerivation rec {
     rev = "dd4e18eb7557a31a3c8318d6612801329877c745";
     sha256 = "12ds0l9lasabzkqfm65ihhjc0zq9w2rgz2ijkcfr3njgpzjs367n";
   };
-  postPatch = ''
-    echo 'Cflags: -I''${includedir}' >> glu.pc.in
-  '';
 
   preConfigure = ''
     ./autogen.sh

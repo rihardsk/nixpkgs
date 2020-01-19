@@ -5,7 +5,8 @@ let
   version = "2.1.1";
  in
 stdenv.mkDerivation rec {
-  name = "argyllcms-${version}";
+  pname = "argyllcms";
+  inherit version;
 
   src = fetchzip {
     # Kind of flacky URL, it was reaturning 406 and inconsistent binaries for a
@@ -93,9 +94,11 @@ stdenv.mkDerivation rec {
     libXrender libXScrnSaver libXdmcp libXau openssl
   ];
 
-  buildFlags = "PREFIX=$(out) all";
+  buildFlags = [ "all" ];
 
-  installFlags = "PREFIX=$(out)";
+  makeFlags = [
+    "PREFIX=${placeholder ''out''}"
+  ];
 
   # Install udev rules, but remove lines that set up the udev-acl
   # stuff, since that is handled by udev's own rules (70-udev-acl.rules)
