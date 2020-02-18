@@ -1,5 +1,5 @@
 { stdenv, lib, fetchFromGitHub, rustPlatform
-, openssl, pkgconfig, protobuf
+, openssl, pkg-config, protobuf
 , Security, libiconv, rdkafka
 
 , features ?
@@ -10,17 +10,17 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "vector";
-  version = "0.6.0";
+  version = "0.7.2";
 
   src = fetchFromGitHub {
     owner  = "timberio";
     repo   = pname;
-    rev    = "refs/tags/v${version}";
-    sha256 = "0bb4552nwkdpnxhaq2mn4iz5w92ggqxc1b78jq2vjbh1317sj9hw";
+    rev    = "v${version}";
+    sha256 = "1r6pqljrl0cqz5x09p6bmf4h52h8m02pg05a09idj86v0c0q6bw3";
   };
 
-  cargoSha256 = "1akyzrscc6pv7ggb1kna05vvxhfzrf1b4kji4bah1ry3yyqxdjsj";
-  buildInputs = [ openssl pkgconfig protobuf rdkafka ]
+  cargoSha256 = "1c742g7a4z5lhr991hxdhwk8h0d43r4vv5bxj80sf3lynyx60yzf";
+  buildInputs = [ openssl pkg-config protobuf rdkafka ]
                 ++ stdenv.lib.optional stdenv.isDarwin [ Security libiconv ];
 
   # needed for internal protobuf c wrapper library
@@ -28,7 +28,8 @@ rustPlatform.buildRustPackage rec {
   PROTOC_INCLUDE="${protobuf}/include";
 
   cargoBuildFlags = [ "--no-default-features" "--features" "${lib.concatStringsSep "," features}" ];
-  checkPhase = ":"; # skip tests, too -- they don't respect the rdkafka flag...
+  # skip tests, too -- they don't respect the rdkafka flag...
+  doCheck = false;
 
   meta = with stdenv.lib; {
     description = "A high-performance logs, metrics, and events router";
