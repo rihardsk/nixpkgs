@@ -27,7 +27,7 @@
 with stdenv.lib;
 
 let
-  version = "19.3.1";
+  version = "19.3.3";
   branch  = versions.major version;
 in
 

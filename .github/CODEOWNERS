@@ -14,7 +14,9 @@
 /lib                        @edolstra @nbp @infinisil
 /lib/systems                @nbp @ericson2314 @matthewbauer
 /lib/generators.nix         @edolstra @nbp @Profpatsch
+/lib/cli.nix                @edolstra @nbp @Profpatsch
 /lib/debug.nix              @edolstra @nbp @Profpatsch
+/lib/asserts.nix            @edolstra @nbp @Profpatsch
 
 # Nixpkgs Internals
 /default.nix                          @nbp
@@ -28,6 +30,9 @@
 /pkgs/build-support/cc-wrapper        @Ericson2314 @orivej
 /pkgs/build-support/bintools-wrapper  @Ericson2314 @orivej
 /pkgs/build-support/setup-hooks       @Ericson2314
+
+# Nixpkgs build-support
+/pkgs/build-support/writers @lassulus @Profpatsch
 
 # NixOS Internals
 /nixos/default.nix          @nbp @infinisil
@@ -162,7 +167,7 @@
 /pkgs/top-level/emacs-packages.nix     @adisbladis
 
 # VimPlugins
-/pkgs/misc/vim-plugins         @jonringer
+/pkgs/misc/vim-plugins         @jonringer @softinio
 
 # VsCode Extensions
 /pkgs/misc/vscode-extensions   @jonringer
