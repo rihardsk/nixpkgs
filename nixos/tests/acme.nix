@@ -74,9 +74,6 @@ in import ./make-test-python.nix {
         after = [ "acme-a.example.com.service" ];
         wantedBy = [ "acme-a.example.com.service" ];
       };
-      systemd.services."acme-a.example.com" = {
-        after = [ "nginx.service" ];
-      };
 
       services.nginx.enable = true;
 
@@ -95,9 +92,6 @@ in import ./make-test-python.nix {
         systemd.targets."acme-finished-b.example.com" = {
           after = [ "acme-b.example.com.service" ];
           wantedBy = [ "acme-b.example.com.service" ];
-        };
-        systemd.services."acme-b.example.com" = {
-          after = [ "nginx.service" ];
         };
         services.nginx.virtualHosts."b.example.com" = {
           enableACME = true;
