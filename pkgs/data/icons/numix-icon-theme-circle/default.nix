@@ -11,11 +11,11 @@ stdenv.mkDerivation rec {
     sha256 = "0za44h7f4vk37yl30xlaa6w76maiipb6p63gl9hl1rshdn9nxq0y";
   };
 
-  nativeBuildInputs = [ gtk3 numix-icon-theme ];
+  nativeBuildInputs = [ gtk3 ];
 
-  propagatedBuildInputs = [
-    hicolor-icon-theme
-  ];
+  buildInputs = [ numix-icon-theme ];
+
+  propagatedBuildInputs = [ hicolor-icon-theme ];
 
   dontDropIconThemeCache = true;
 
@@ -36,7 +36,7 @@ stdenv.mkDerivation rec {
 
   meta = with stdenv.lib; {
     description = "Numix icon theme (circle version)";
-    homepage = https://numixproject.github.io;
+    homepage = "https://numixproject.github.io";
     license = licenses.gpl3;
     # darwin cannot deal with file names differing only in case
     platforms = platforms.linux;
