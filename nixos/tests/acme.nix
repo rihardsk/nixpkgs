@@ -51,10 +51,9 @@ in import ./make-test-python.nix {
             webroot = "/var/lib/acme/acme-challenges";
         };
       };
-      systemd.targets."acme-finished-standalone.com" = {};
-      systemd.services."acme-standalone.com" = {
-        wants = [ "acme-finished-standalone.com.target" ];
-        before = [ "acme-finished-standalone.com.target" ];
+      systemd.targets."acme-finished-standalone.com" = {
+        after = [ "acme-standalone.com.service" ];
+        wantedBy = [ "acme-standalone.com.service" ];
       };
       services.nginx.enable = true;
       services.nginx.virtualHosts."standalone.com" = {
@@ -71,11 +70,9 @@ in import ./make-test-python.nix {
 
       # A target remains active. Use this to probe the fact that
       # a service fired eventhough it is not RemainAfterExit
-      systemd.targets."acme-finished-a.example.com" = {};
-      systemd.services."acme-a.example.com" = {
-        wants = [ "acme-finished-a.example.com.target" ];
-        before = [ "acme-finished-a.example.com.target" ];
-        after = [ "nginx.service" ];
+      systemd.targets."acme-finished-a.example.com" = {
+        after = [ "acme-a.example.com.service" ];
+        wantedBy = [ "acme-a.example.com.service" ];
       };
 
       services.nginx.enable = true;
@@ -92,11 +89,9 @@ in import ./make-test-python.nix {
       security.acme.server = "https://acme-v02.api.letsencrypt.org/dir";
 
       specialisation.second-cert.configuration = {pkgs, ...}: {
-        systemd.targets."acme-finished-b.example.com" = {};
-        systemd.services."acme-b.example.com" = {
-          wants = [ "acme-finished-b.example.com.target" ];
-          before = [ "acme-finished-b.example.com.target" ];
-          after = [ "nginx.service" ];
+        systemd.targets."acme-finished-b.example.com" = {
+          after = [ "acme-b.example.com.service" ];
+          wantedBy = [ "acme-b.example.com.service" ];
         };
         services.nginx.virtualHosts."b.example.com" = {
           enableACME = true;
@@ -107,6 +102,7 @@ in import ./make-test-python.nix {
           '';
         };
       };
+
       specialisation.dns-01.configuration = {pkgs, config, nodes, lib, ...}: {
         security.acme.certs."example.com" = {
           domain = "*.example.com";
@@ -118,10 +114,12 @@ in import ./make-test-python.nix {
           user = config.services.nginx.user;
           group = config.services.nginx.group;
         };
-        systemd.targets."acme-finished-example.com" = {};
+        systemd.targets."acme-finished-example.com" = {
+          after = [ "acme-example.com.service" ];
+          wantedBy = [ "acme-example.com.service" ];
+        };
         systemd.services."acme-example.com" = {
-          wants = [ "acme-finished-example.com.target" ];
-          before = [ "acme-finished-example.com.target" "nginx.service" ];
+          before = [ "nginx.service" ];
           wantedBy = [ "nginx.service" ];
         };
         services.nginx.virtualHosts."c.example.com" = {
@@ -133,6 +131,26 @@ in import ./make-test-python.nix {
             mkdir -p "$out"
             echo hello world > "$out/index.html"
           '';
+        };
+      };
+
+      # When nginx depends on a service that is slow to start up, requesting used to fail
+      # certificates fail.  Reproducer for https://github.com/NixOS/nixpkgs/issues/81842
+      specialisation.slow-startup.configuration = { pkgs, config, nodes, lib, ...}: {
+        systemd.services.my-slow-service = {
+          wantedBy = [ "multi-user.target" "nginx.service" ];
+          before = [ "nginx.service" ];
+          preStart = "sleep 5";
+          script = "${pkgs.python3}/bin/python -m http.server";
+        };
+        systemd.targets."acme-finished-d.example.com" = {
+          after = [ "acme-d.example.com.service" ];
+          wantedBy = [ "acme-d.example.com.service" ];
+        };
+        services.nginx.virtualHosts."d.example.com" = {
+          forceSSL = true;
+          enableACME = true;
+          locations."/".proxyPass = "http://localhost:8000";
         };
       };
     };
@@ -212,5 +230,15 @@ in import ./make-test-python.nix {
           client.succeed(
               "curl --cacert /tmp/ca.crt https://c.example.com/ | grep -qF 'hello world'"
           )
+
+      with subtest("Can request certificate of nginx when startup is delayed"):
+          webserver.succeed(
+              "${switchToNewServer}"
+          )
+          webserver.succeed(
+              "/run/current-system/specialisation/slow-startup/bin/switch-to-configuration test"
+          )
+          webserver.wait_for_unit("acme-finished-d.example.com.target")
+          client.succeed("curl --cacert /tmp/ca.crt https://d.example.com/")
     '';
 }
