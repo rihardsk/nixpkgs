@@ -19,13 +19,13 @@
 
 stdenv.mkDerivation rec {
   pname = "ephemeral";
-  version = "6.3.1";
+  version = "6.4.1";
 
   src = fetchFromGitHub {
     owner = "cassidyjames";
     repo = "ephemeral";
     rev = version;
-    sha256 = "13rl26lv5xgagiv21yp5pz69bkwh4nnz1lx9wryhsplki45xm1sq";
+    sha256 = "1lzcwaczh601kwbx7fzg32nrzlg67asby7p86qy10qz86xf4g608";
   };
 
   nativeBuildInputs = [
