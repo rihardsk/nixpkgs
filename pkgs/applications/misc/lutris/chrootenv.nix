@@ -28,7 +28,7 @@ in buildFHSUserEnv {
     # DGen // TODO: libarchive is broken
 
     # Dolphin
-    bluez ffmpeg gettext portaudio wxGTK30 miniupnpc mbedtls lzo sfml gsm
+    bluez ffmpeg_3 gettext portaudio wxGTK30 miniupnpc mbedtls lzo sfml gsm
     wavpack orc nettle gmp pcre vulkan-loader
 
     # DOSBox
@@ -104,6 +104,9 @@ in buildFHSUserEnv {
     # WINE
     cups lcms2 mpg123 cairo unixODBC samba4 sane-backends openldap
     ocl-icd utillinux libkrb5
+
+    # Proton
+    libselinux
 
     # Winetricks
     fribidi

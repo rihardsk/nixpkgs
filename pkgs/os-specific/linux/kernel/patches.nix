@@ -40,7 +40,7 @@
 
   tag_hardened = {
     name = "tag-hardened";
-    patch = ./tag-hardened.patch;
+    patch = ./hardened/tag-hardened.patch;
   };
 
   hardened = let
@@ -48,7 +48,7 @@
       name = lib.removeSuffix ".patch" src.name;
       patch = fetchurl src;
     };
-    patches = builtins.fromJSON (builtins.readFile ./hardened-patches.json);
+    patches = builtins.fromJSON (builtins.readFile ./hardened/patches.json);
   in lib.mapAttrs mkPatch patches;
 
   # https://bugzilla.kernel.org/show_bug.cgi?id=197591#c6

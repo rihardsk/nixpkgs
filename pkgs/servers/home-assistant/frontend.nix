@@ -4,11 +4,11 @@ buildPythonPackage rec {
   # the frontend version corresponding to a specific home-assistant version can be found here
   # https://github.com/home-assistant/home-assistant/blob/master/homeassistant/components/frontend/manifest.json
   pname = "home-assistant-frontend";
-  version = "20200427.1";
+  version = "20200603.2";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "0ch669asyjqbh73y4a170j86hw9in2fw3xmxaxwh5r6sgx28k4v7";
+    sha256 = "1p99f5q8frk5k5lh1gjxyq539p1iv9fslpbfirh8njx3d0a85l84";
   };
 
   # no Python tests implemented

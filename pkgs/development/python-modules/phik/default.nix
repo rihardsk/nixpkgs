@@ -15,14 +15,14 @@
 
 buildPythonPackage rec {
   pname = "phik";
-  version = "0.9.8";
+  version = "0.9.12";
   format = "wheel";
   disabled = !isPy3k;
 
   src = fetchPypi {
     inherit pname version format;
     python = "py3";
-    sha256 = "c398452c5c1eea153905666b289c6a153712cf3d58811fa41e2bbbd27a65d678";
+    sha256 = "c4f86e5587e5b456e69bf69d95d07fe7aafc341c40f8f3a21dd5b52272e9ae7b";
   };
 
   checkInputs = [
