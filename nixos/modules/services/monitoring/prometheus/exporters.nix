@@ -34,16 +34,19 @@ let
     "mail"
     "mikrotik"
     "minio"
+    "modemmanager"
     "nextcloud"
     "nginx"
     "node"
     "postfix"
     "postgres"
+    "redis"
     "rspamd"
     "snmp"
     "surfboard"
     "tor"
     "unifi"
+    "unifi-poller"
     "varnish"
     "wireguard"
   ] (name:
@@ -82,7 +85,8 @@ let
     };
     firewallFilter = mkOption {
       type = types.str;
-      default = "-p tcp -m tcp --dport ${toString port}";
+      default = "-p tcp -m tcp --dport ${toString cfg.${name}.port}";
+      defaultText = "-p tcp -m tcp --dport ${toString port}";
       example = literalExample ''
         "-i eth0 -p tcp -m tcp --dport ${toString port}"
       '';
@@ -171,15 +175,6 @@ in
        (opt: lib.mkRemovedOptionModule [ "services" "prometheus" "${opt}" ] ''
          The prometheus exporters are now configured using `services.prometheus.exporters'.
          See the 18.03 release notes for more information.
-       '' ))
-
-    ++ (lib.forEach [ "enable" "substitutions" "preset" ]
-       (opt: lib.mkRemovedOptionModule [ "fonts" "fontconfig" "ultimate" "${opt}" ] ''
-         The fonts.fontconfig.ultimate module and configuration is obsolete.
-         The repository has since been archived and activity has ceased.
-         https://github.com/bohoomil/fontconfig-ultimate/issues/171.
-         No action should be needed for font configuration, as the fonts.fontconfig
-         module is already used by default.
        '' ));
 
   options.services.prometheus.exporters = mkOption {

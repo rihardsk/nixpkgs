@@ -54,6 +54,8 @@ buildPythonPackage rec {
     "proxy_https_bad_response"
     "partially_applied_handler"
     "middleware"
+    # no longer compatible with pytest>=6
+    "aiohttp_plugin_async_fixture"
   ] ++ lib.optionals stdenv.is32bit [
     "test_cookiejar"
   ] ++ lib.optionals isPy38 [
@@ -62,6 +64,7 @@ buildPythonPackage rec {
     "test_read_incomplete_chunk"
     "test_request_tracing_exception"
   ] ++ lib.optionals stdenv.isDarwin [
+    "test_addresses"  # https://github.com/aio-libs/aiohttp/issues/3572
     "test_close"
   ];
 

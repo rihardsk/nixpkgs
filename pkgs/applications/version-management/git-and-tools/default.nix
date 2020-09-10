@@ -26,7 +26,9 @@ let
 
   darcs-to-git = callPackage ./darcs-to-git { };
 
-  delta = callPackage ./delta { };
+  delta = callPackage ./delta {
+    inherit (darwin.apple_sdk.frameworks) Security;
+  };
 
   diff-so-fancy = callPackage ./diff-so-fancy { };
 
@@ -61,6 +63,8 @@ let
 
   git-annex-utils = callPackage ./git-annex-utils { };
 
+  git-brunch = pkgs.haskellPackages.git-brunch;
+
   git-appraise = callPackage ./git-appraise {};
 
   git-bug = callPackage ./git-bug { };
@@ -94,7 +98,7 @@ let
 
   git-fame = callPackage ./git-fame {};
 
-  git-fast-export = callPackage ./fast-export { };
+  git-fast-export = callPackage ./fast-export { mercurial = mercurial_4; };
 
   git-filter-repo = callPackage ./git-filter-repo {
     pythonPackages = python3Packages;
@@ -207,6 +211,8 @@ let
 
   qgit = qt5.callPackage ./qgit { };
 
+  rs-git-fsmonitor = callPackage ./rs-git-fsmonitor { };
+
   scmpuff = callPackage ./scmpuff { };
 
   stgit = callPackage ./stgit { };
@@ -233,6 +239,7 @@ let
   # aliases
   darcsToGit = darcs-to-git;
   gitAnnex = git-annex;
+  gitBrunch = git-brunch;
   gitFastExport = git-fast-export;
   gitRemoteGcrypt = git-remote-gcrypt;
   svn_all_fast_export = svn-all-fast-export;

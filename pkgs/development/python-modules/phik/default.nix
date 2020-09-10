@@ -5,6 +5,7 @@
 , pytest
 , pytest-pylint
 , nbconvert
+, joblib
 , jupyter_client
 , numpy
 , scipy
@@ -15,14 +16,14 @@
 
 buildPythonPackage rec {
   pname = "phik";
-  version = "0.9.12";
+  version = "0.10.0";
   format = "wheel";
   disabled = !isPy3k;
 
   src = fetchPypi {
     inherit pname version format;
     python = "py3";
-    sha256 = "c4f86e5587e5b456e69bf69d95d07fe7aafc341c40f8f3a21dd5b52272e9ae7b";
+    sha256 = "b745313c5ff9d6a3092eefa97f83fa4dbed178c9ce69161b655e95497cb2f38b";
   };
 
   checkInputs = [
@@ -33,6 +34,7 @@ buildPythonPackage rec {
   ];
 
   propagatedBuildInputs = [
+    joblib
     numpy
     scipy
     pandas

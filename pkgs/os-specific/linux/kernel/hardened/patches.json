@@ -1,22 +1,27 @@
 {
     "4.14": {
-        "name": "linux-hardened-4.14.184.a.patch",
-        "sha256": "1g12kz6ikdwp6b7000pfy3myga90mvxyl04b9267fk88jwih6yhk",
-        "url": "https://github.com/anthraxx/linux-hardened/releases/download/4.14.184.a/linux-hardened-4.14.184.a.patch"
+        "name": "linux-hardened-4.14.197.a.patch",
+        "sha256": "171bgi7pw64v8byqmplafnyx26h1yrxhci9b12ndjyfg91fkhw31",
+        "url": "https://github.com/anthraxx/linux-hardened/releases/download/4.14.197.a/linux-hardened-4.14.197.a.patch"
     },
     "4.19": {
-        "name": "linux-hardened-4.19.128.a.patch",
-        "sha256": "19ayzx9rf4j31ypavxwamd290lm95wmi7v165avxslahnx6pdsxs",
-        "url": "https://github.com/anthraxx/linux-hardened/releases/download/4.19.128.a/linux-hardened-4.19.128.a.patch"
+        "name": "linux-hardened-4.19.144.a.patch",
+        "sha256": "0vs48h3zcir6s72rnvkjxvjl6cscfaigwji00q940v7lgqyq8lvl",
+        "url": "https://github.com/anthraxx/linux-hardened/releases/download/4.19.144.a/linux-hardened-4.19.144.a.patch"
     },
     "5.4": {
-        "name": "linux-hardened-5.4.46.a.patch",
-        "sha256": "0f2d53na7g6dhiba2ym09lm4fp3hwm6kw6mpm5jk46jmb6j7iwk5",
-        "url": "https://github.com/anthraxx/linux-hardened/releases/download/5.4.46.a/linux-hardened-5.4.46.a.patch"
+        "name": "linux-hardened-5.4.64.a.patch",
+        "sha256": "1wkkvs66bmgqvgy1iqjck0c0mdad8lnwl42n5npw4ynjhfgiwp3b",
+        "url": "https://github.com/anthraxx/linux-hardened/releases/download/5.4.64.a/linux-hardened-5.4.64.a.patch"
     },
-    "5.6": {
-        "name": "linux-hardened-5.6.18.a.patch",
-        "sha256": "0idvgjg7kji4w3341acfqywi0qqn3pvxcmiz70cd7inhlqaqrw63",
-        "url": "https://github.com/anthraxx/linux-hardened/releases/download/5.6.18.a/linux-hardened-5.6.18.a.patch"
+    "5.7": {
+        "name": "linux-hardened-5.7.19.a.patch",
+        "sha256": "1lydlh499aj3ck5cnv8q2271y4klvp17zm7j7qni16am14bld936",
+        "url": "https://github.com/anthraxx/linux-hardened/releases/download/5.7.19.a/linux-hardened-5.7.19.a.patch"
+    },
+    "5.8": {
+        "name": "linux-hardened-5.8.8.a.patch",
+        "sha256": "0nm6k8mb51wwwpmb65ragdkxrvljr3dxslaad3l4x0d0yah4d93z",
+        "url": "https://github.com/anthraxx/linux-hardened/releases/download/5.8.8.a/linux-hardened-5.8.8.a.patch"
     }
 }

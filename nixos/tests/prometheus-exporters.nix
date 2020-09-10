@@ -22,6 +22,9 @@ let
  *  `metricProvider` (optional)
  *    this attribute contains additional machine config
  *
+ *  `nodeName` (optional)
+ *    override an incompatible testnode name
+ *
  *  Example:
  *    exporterTests.<exporterName> = {
  *      exporterConfig = {
@@ -363,6 +366,31 @@ let
       '';
     };
 
+    modemmanager = {
+      exporterConfig = {
+        enable = true;
+        refreshRate = "10s";
+      };
+      metricProvider = {
+        # ModemManager is installed when NetworkManager is enabled. Ensure it is
+        # started and is wanted by NM and the exporter to start everything up
+        # in the right order.
+        networking.networkmanager.enable = true;
+        systemd.services.ModemManager = {
+          enable = true;
+          wantedBy = [ "NetworkManager.service" "prometheus-modemmanager-exporter.service" ];
+        };
+      };
+      exporterTest = ''
+        wait_for_unit("ModemManager.service")
+        wait_for_unit("prometheus-modemmanager-exporter.service")
+        wait_for_open_port(9539)
+        succeed(
+            "curl -sSf http://localhost:9539/metrics | grep -q 'modemmanager_info'"
+        )
+      '';
+    };
+
     nextcloud = {
       exporterConfig = {
         enable = true;
@@ -475,6 +503,20 @@ let
       '';
     };
 
+    redis = {
+      exporterConfig = {
+        enable = true;
+      };
+      metricProvider.services.redis.enable = true;
+      exporterTest = ''
+        wait_for_unit("redis.service")
+        wait_for_unit("prometheus-redis-exporter.service")
+        wait_for_open_port(6379)
+        wait_for_open_port(9121)
+        wait_until_succeeds("curl -sSf localhost:9121/metrics | grep -q 'redis_up 1'")
+      '';
+    };
+
     rspamd = {
       exporterConfig = {
         enable = true;
@@ -551,6 +593,19 @@ let
       '';
     };
 
+    unifi-poller = {
+      nodeName = "unifi_poller";
+      exporterConfig.enable = true;
+      exporterConfig.controllers = [ { } ];
+      exporterTest = ''
+        wait_for_unit("prometheus-unifi-poller-exporter.service")
+        wait_for_open_port(9130)
+        succeed(
+            "curl -sSf localhost:9130/metrics | grep -q 'unifipoller_build_info{.\\+} 1'"
+        )
+      '';
+    };
+
     varnish = {
       exporterConfig = {
         enable = true;
@@ -607,24 +662,27 @@ let
     };
   };
 in
-mapAttrs (exporter: testConfig: (makeTest {
+mapAttrs (exporter: testConfig: (makeTest (let
+  nodeName = testConfig.nodeName or exporter;
+
+in {
   name = "prometheus-${exporter}-exporter";
 
-  nodes.${exporter} = mkMerge [{
+  nodes.${nodeName} = mkMerge [{
     services.prometheus.exporters.${exporter} = testConfig.exporterConfig;
   } testConfig.metricProvider or {}];
 
   testScript = ''
-    ${exporter}.start()
+    ${nodeName}.start()
     ${concatStringsSep "\n" (map (line:
       if (builtins.substring 0 1 line == " " || builtins.substring 0 1 line == ")")
       then line
-      else "${exporter}.${line}"
+      else "${nodeName}.${line}"
     ) (splitString "\n" (removeSuffix "\n" testConfig.exporterTest)))}
-    ${exporter}.shutdown()
+    ${nodeName}.shutdown()
   '';
 
   meta = with maintainers; {
-    maintainers = [ willibutz ];
+    maintainers = [ willibutz elseym ];
   };
-})) exporterTests
+}))) exporterTests

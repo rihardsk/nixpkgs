@@ -77,8 +77,11 @@ in {
         AmbientCapabilities = "CAP_NET_ADMIN CAP_NET_RAW";
         NoNewPrivileges = true;
         DynamicUser = true;
+        Type = "notify";
+        NotifyAccess = "main";
         ExecStart = "${getBin cfg.package}/bin/corerad -c=${cfg.configFile}";
         Restart = "on-failure";
+        RestartKillSignal = "SIGHUP";
       };
     };
   };

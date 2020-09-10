@@ -12,7 +12,7 @@
 , cups
 , dbus
 , expat
-, ffmpeg_3
+, ffmpeg
 , fontconfig
 , freetype
 , gdk-pixbuf
@@ -61,7 +61,7 @@ stdenv.mkDerivation rec {
     platforms = [ "x86_64-linux" ];
     hydraPlatforms = [];
     license = stdenv.lib.licenses.unfreeRedistributable;
-    maintainers = [ stdenv.lib.maintainers.mlatus ];
+    maintainers = with stdenv.lib.maintainers; [ mlatus th0rgal ];
   };
 
   buildInputs = with xorg; [
@@ -71,7 +71,7 @@ stdenv.mkDerivation rec {
     cairo
     dbus.lib
     expat
-    ffmpeg_3
+    ffmpeg
     fontconfig
     freetype
     gdk-pixbuf
