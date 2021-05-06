@@ -1,9 +1,11 @@
-{ stdenv, fetchFromGitHub, rustPlatform, clang, llvmPackages, rustfmt, writeScriptBin,
-  runtimeShell }:
+{ lib, fetchFromGitHub, rustPlatform, clang, llvmPackages, rustfmt, writeScriptBin
+, runtimeShell
+, bash
+}:
 
 rustPlatform.buildRustPackage rec {
   pname = "rust-bindgen";
-  version = "0.54.1";
+  version = "0.57.0";
 
   RUSTFLAGS = "--cap-lints warn"; # probably OK to remove after update
 
@@ -11,12 +13,14 @@ rustPlatform.buildRustPackage rec {
     owner = "rust-lang";
     repo = pname;
     rev = "v${version}";
-    sha256 = "116np72w6agsi94xa1bdn6h7sa9gd522h358zlixk9xrhrx7yfn3";
+    sha256 = "sha256-0d8+Rkb4h1DoFUQ7u2/kPR/fUUz0YvI+hNT4iXL3mxY=";
   };
 
-  cargoSha256 = "12a7bd2579jcnkss073v5w5w68fxwvhq6c6ndjy8vp78wg83qich";
+  cargoSha256 = "sha256-cUDOi3QwjEJaBXGSQZQ76gZ702QLNok8fr6U2q+tVao=";
 
-  libclang = llvmPackages.libclang.lib; #for substituteAll
+  #for substituteAll
+  libclang = llvmPackages.libclang.lib;
+  inherit bash;
 
   buildInputs = [ libclang ];
 
@@ -50,8 +54,8 @@ rustPlatform.buildRustPackage rec {
     patchShebangs .
   '';
 
-  meta = with stdenv.lib; {
-    description = "Automatically generates Rust FFI bindings to C (and some C++) libraries.";
+  meta = with lib; {
+    description = "Automatically generates Rust FFI bindings to C (and some C++) libraries";
     longDescription = ''
       Bindgen takes a c or c++ header file and turns them into
       rust ffi declarations.

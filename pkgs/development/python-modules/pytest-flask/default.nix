@@ -1,19 +1,18 @@
-{ stdenv, buildPythonPackage, fetchPypi, pytest, flask, werkzeug, setuptools_scm }:
+{ lib, buildPythonPackage, fetchPypi, pytest, flask, werkzeug, setuptools_scm, isPy27 }:
 
 buildPythonPackage rec {
   pname = "pytest-flask";
-  version = "1.0.0";
+  version = "1.2.0";
+  disabled = isPy27;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "4d5678a045c07317618d80223ea124e21e8acc89dae109542dd1fdf6783d96c2";
+    sha256 = "46fde652f77777bf02dc91205aec4ce20cdf2acbbbd66a918ab91f5c14693d3d";
   };
 
   doCheck = false;
 
-  buildInputs = [
-     pytest
-  ];
+  buildInputs = [ pytest ];
 
   propagatedBuildInputs = [
     flask
@@ -22,7 +21,7 @@ buildPythonPackage rec {
 
   nativeBuildInputs = [ setuptools_scm ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://github.com/pytest-dev/pytest-flask/";
     license = licenses.mit;
     description = "A set of py.test fixtures to test Flask applications";

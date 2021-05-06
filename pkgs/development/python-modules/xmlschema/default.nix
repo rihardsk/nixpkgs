@@ -5,14 +5,14 @@
 }:
 
 buildPythonPackage rec {
-  version = "1.2.3";
+  version = "1.5.3";
   pname = "xmlschema";
 
   src = fetchFromGitHub {
     owner = "sissaschool";
     repo = "xmlschema";
     rev = "v${version}";
-    sha256 = "1lasi84d5v66xpd40fbj3lqwc5hfh3izxrr2wbfdbj4a3m996zc9";
+    sha256 = "0pv8zdz03wjnjwrgjr5pc3q69h7zh51h0iwgwxwl65qi1r6ydk54";
   };
 
   propagatedBuildInputs = [ elementpath ];
@@ -32,7 +32,7 @@ buildPythonPackage rec {
       --ignore=tests/test_schemas.py \
       --ignore=tests/test_memory.py \
       --ignore=tests/test_validation.py \
-      -k 'not element_tree_import_script'
+      -k 'not element_tree_import_script and not export_remote'
   '';
 
   meta = with lib; {

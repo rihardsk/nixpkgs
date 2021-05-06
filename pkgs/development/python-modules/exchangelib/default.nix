@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, buildPythonPackage,
+{ lib, fetchFromGitHub, buildPythonPackage,
   pythonOlder,
   lxml, tzlocal, python-dateutil, pygments, requests-kerberos,
   defusedxml, cached-property, isodate, requests_ntlm, dnspython,
@@ -9,7 +9,7 @@
 
 buildPythonPackage rec {
   pname = "exchangelib";
-  version = "3.2.1";
+  version = "4.1.0";
   disabled = pythonOlder "3.5";
 
   # tests are not present in the PyPI version
@@ -17,7 +17,7 @@ buildPythonPackage rec {
     owner = "ecederstrand";
     repo = pname;
     rev = "v${version}";
-    sha256 = "1sh780q2iwdm3bnlnfdacracf0n7jhbv0g39cdx65v3d510zp4jv";
+    sha256 = "0lkhjiz78x00d5gzn455660f31f8y4fcrqcn6rh0m41r1ar5im17";
   };
 
   checkInputs = [ psutil requests-mock pyyaml
@@ -29,7 +29,7 @@ buildPythonPackage rec {
     oauthlib requests_oauthlib
   ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Client for Microsoft Exchange Web Services (EWS)";
     homepage    = "https://github.com/ecederstrand/exchangelib";
     license     = licenses.bsd2;

@@ -3,6 +3,7 @@
 , fetchFromGitHub
 , rustPlatform
 , openssl
+, zlib
 , pkg-config
 , python3
 , xorg
@@ -14,35 +15,31 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "nushell";
-  version = "0.19.0";
+  version = "0.30.0";
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     rev = version;
-    sha256 = "08r6f71cy4j22k0mllm134x4dfixaircpaz5arrj93xsbp38nk92";
+    sha256 = "104zrj15kmc0a698dc8dxbzhg1rjqn38v3wqcwg2xiickglpgd5f";
   };
 
-  cargoSha256 = "15kvl490abxdv6706zs7pv0q5fhghmdvlfbn19037sldkcsfl86b";
+  cargoSha256 = "1c6yhkj1hyr82y82nff6gy9kq9z0mbq3ivlq8rir10pnqy4j5791";
 
   nativeBuildInputs = [ pkg-config ]
     ++ lib.optionals (withStableFeatures && stdenv.isLinux) [ python3 ];
 
-  buildInputs = lib.optionals stdenv.isLinux [ openssl ]
-    ++ lib.optionals stdenv.isDarwin [ libiconv Security ]
+  buildInputs = [ openssl ]
+    ++ lib.optionals stdenv.isDarwin [ zlib libiconv Security ]
     ++ lib.optionals (withStableFeatures && stdenv.isLinux) [ xorg.libX11 ]
     ++ lib.optionals (withStableFeatures && stdenv.isDarwin) [ AppKit ];
 
   cargoBuildFlags = lib.optional withStableFeatures "--features stable";
 
-  preCheck = ''
-    export HOME=$TMPDIR
-  '';
-
   checkPhase = ''
     runHook preCheck
     echo "Running cargo test"
-    cargo test
+    HOME=$TMPDIR cargo test
     runHook postCheck
   '';
 
@@ -50,8 +47,9 @@ rustPlatform.buildRustPackage rec {
     description = "A modern shell written in Rust";
     homepage = "https://www.nushell.sh/";
     license = licenses.mit;
-    maintainers = with maintainers; [ filalex77 johntitor marsam ];
+    maintainers = with maintainers; [ Br1ght0ne johntitor marsam ];
     platforms = [ "x86_64-linux" "i686-linux" "x86_64-darwin" "aarch64-linux" ];
+    mainProgram = "nu";
   };
 
   passthru = {

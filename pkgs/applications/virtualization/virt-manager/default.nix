@@ -1,26 +1,27 @@
-{ stdenv, fetchurl, python3Packages, intltool, file
+{ lib, fetchurl, python3Packages, intltool, file
 , wrapGAppsHook, gtk-vnc, vte, avahi, dconf
 , gobject-introspection, libvirt-glib, system-libvirt
-, gsettings-desktop-schemas, glib, libosinfo, gnome3
-, gtksourceview4
+, gsettings-desktop-schemas, libosinfo, gnome3
+, gtksourceview4, docutils
 , spiceSupport ? true, spice-gtk ? null
 , cpio, e2fsprogs, findutils, gzip
 }:
 
-with stdenv.lib;
+with lib;
 
 python3Packages.buildPythonApplication rec {
   pname = "virt-manager";
-  version = "2.2.1";
+  version = "3.2.0";
 
   src = fetchurl {
-    url = "http://virt-manager.org/download/sources/virt-manager/${pname}-${version}.tar.gz";
-    sha256 = "06ws0agxlip6p6n3n43knsnjyd91gqhh2dadgc33wl9lx1k8vn6g";
+    url = "https://releases.pagure.org/virt-manager/${pname}-${version}.tar.gz";
+    sha256 = "11kvpzcmyir91qz0dsnk7748jbb4wr8mrc744w117qc91pcy6vrb";
   };
 
   nativeBuildInputs = [
     intltool file
     gobject-introspection # for setup hook populating GI_TYPELIB_PATH
+    docutils
   ];
 
   buildInputs = [
@@ -55,7 +56,7 @@ python3Packages.buildPythonApplication rec {
   # Failed tests
   doCheck = false;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "http://virt-manager.org";
     description = "Desktop user interface for managing virtual machines";
     longDescription = ''

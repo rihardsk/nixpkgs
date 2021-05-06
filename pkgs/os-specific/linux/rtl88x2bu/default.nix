@@ -1,14 +1,14 @@
-{ stdenv, fetchFromGitHub, kernel, bc }:
+{ lib, stdenv, fetchFromGitHub, kernel, bc }:
 
 stdenv.mkDerivation rec {
   name = "rtl88x2bu-${kernel.version}-${version}";
-  version = "unstable-2020-05-19";
+  version = "unstable-2021-01-21";
 
   src = fetchFromGitHub {
     owner = "cilynx";
     repo = "rtl88x2BU";
-    rev = "0f159d7cd937a12b818121cb1f1c4910bd1adc72";
-    sha256 = "0flqnvzfdb4wsiiqv9vf5gfwd5fgpjvhs9zhqknnv1cmp8msgw6y";
+    rev = "48e7c19c92a77554403e1347447f8e2cfd780228";
+    sha256 = "0nw2kgblpq6qlr43gbfxqvq0c83664f4czfwzsyfjr47rj00iyq7";
   };
 
   hardeningDisable = [ "pic" ];
@@ -28,10 +28,10 @@ stdenv.mkDerivation rec {
     mkdir -p "$out/lib/modules/${kernel.modDirVersion}/kernel/net/wireless/"
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Realtek rtl88x2bu driver";
     homepage = "https://github.com/cilynx/rtl88x2bu";
-    license = licenses.gpl2;
+    license = licenses.gpl2Only;
     platforms = platforms.linux;
     maintainers = [ maintainers.ralith ];
   };

@@ -1,11 +1,17 @@
-{ lib, callPackage, fetchpatch, fetchurl, stdenv }:
+{ lib, callPackage, fetchpatch, fetchurl, stdenv, pkgsi686Linux }:
 
 let
-
-generic = args:
-if ((!lib.versionOlder args.version "391")
+  generic = args: let
+    imported = import ./generic.nix args;
+  in if ((!lib.versionOlder args.version "391")
     && stdenv.hostPlatform.system != "x86_64-linux") then null
-  else callPackage (import ./generic.nix args) { };
+  else callPackage imported {
+    lib32 = (pkgsi686Linux.callPackage imported {
+      libsOnly = true;
+      kernel = null;
+    }).out;
+  };
+
   kernel = callPackage # a hacky way of extracting parameters from callPackage
     ({ kernel, libsOnly ? false }: if libsOnly then { } else kernel) { };
 
@@ -22,23 +28,39 @@ rec {
   # Policy: use the highest stable version as the default (on our master).
   stable = if stdenv.hostPlatform.system == "x86_64-linux"
     then generic {
-      version = "450.66";
-      sha256_64bit = "1a6va0gvbzpkyza693v2ml1is4xbv8wxasqk0zd5y7rxin94c1ms";
-      settingsSha256 = "0mkgs91gx7xb7f24xkq9fl7i8d4l7s0wr9a44b1gm1vkw82fm7lj";
-      persistencedSha256 = "02id8cg8fba7c1j4m6vj4gp2mv39lz2k557kdjw8lszcpw6f1fhh";
+      version = "460.73.01";
+      sha256_64bit = "120ymf59l6nipczszf82lrm2p4ihhqyv2pfwwfg9wy96vqcckc8i";
+      settingsSha256 = "08jh7g34p9yxv5fh1cw0r2pjx65ryiv3w2lk1qg0gxn2r7xypkx0";
+      persistencedSha256 = "040gx4wqp3hxcfb4aba4sl7b01ixr5slhzw0xldwcqlmhpwqphi5";
     }
     else legacy_390;
 
-  # No active beta right now
-  beta = stable;
+  beta = generic {
+    version = "465.27";
+    sha256_64bit = "fmn/qFve5qqqa26n4dsoOwGZ+ash5Bon3JBI8kncMXE=";
+    settingsSha256 = "3BFLCx0dcrQY4Mv1joMsiVPwTPyufgsNT5pFgp1Mk/A=";
+    persistencedSha256 = "HtoFGTiBnAeQyRTOMlve5poaQh63LHRD+DHJxZO+c90=";
+  };
+
+  # Vulkan developer beta driver
+  # See here for more information: https://developer.nvidia.com/vulkan-driver
+  vulkan_beta = generic rec {
+    version = "455.46.04";
+    persistencedVersion = "455.45.01";
+    settingsVersion = "455.45.01";
+    sha256_64bit = "1iv42w3x1vc00bgn6y4w1hnfsvnh6bvj3vcrq8hw47760sqwa4xa";
+    settingsSha256 = "09v86y2c8xas9ql0bqr7vrjxx3if6javccwjzyly11dzffm02h7g";
+    persistencedSha256 = "13s4b73il0lq2hs81q03176n16mng737bfsp3bxnxgnrv3whrayz";
+    url = "https://developer.nvidia.com/vulkan-beta-${lib.concatStrings (lib.splitString "." version)}-linux";
+  };
 
   # Last one supporting x86
   legacy_390 = generic {
-    version = "390.138";
-    sha256_32bit = "0y3qjygl0kfz9qs0rp9scn1k3l8ym9dib7wpkyh5gs4klcip7xkv";
-    sha256_64bit = "0rnnb5l4i8s76vlg6yvlrxhm2x9wdqw7k5hgf4fyaa3cr3k1kysz";
-    settingsSha256 = "0ad6hwl56nvbdv9g85lw7ywadqvc2gaq9x6d2vjcia9kg4vrmfqx";
-    persistencedSha256 = "15jciyq6i3pz1g67xzqlwmc62v3xswzhjcqmfcdndvlvhcibsimr";
+    version = "390.143";
+    sha256_32bit = "AelrdTTeo/3+ZdXK0iniZDB8gJUkeZQtNoRm25z+bQY=";
+    sha256_64bit = "tyKqcPM71ErK8ZZHLPtxmgrWzv6tfEmxBRveCSwTlO8=";
+    settingsSha256 = "EJPXZbxZS1CMENAYk9dCAIsHsRTXJpj473+JLuhGkWI=";
+    persistencedSha256 = "FtlPF3jCNr18NnImTmr8zJsaK9wbj/aWZ9LwoLr5SeE=";
   };
 
   legacy_340 = generic {
@@ -77,6 +99,6 @@ rec {
         '';
     in applyPatches [ "fix-typos" ];
     patches = maybePatch_drm_legacy;
-    broken = stdenv.lib.versionAtLeast kernel.version "4.18";
+    broken = lib.versionAtLeast kernel.version "4.18";
   };
 }

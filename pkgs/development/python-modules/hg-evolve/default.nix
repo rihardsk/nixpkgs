@@ -1,4 +1,4 @@
-{ stdenv
+{ lib
 , buildPythonPackage
 , fetchPypi
 , isPy3k
@@ -6,19 +6,19 @@
 
 buildPythonPackage rec {
   pname = "hg-evolve";
-  version = "10.0.1";
+  version = "10.3.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "9468b3e2721744b077413c3d4a6b321b61370d4c87b90afa40dc2b48ad877d4b";
+    sha256 = "5d7f73fc1c357134ae9b4a3ed2d844ab8e75a4ca1303679a9e150e87617e7bc7";
   };
 
   doCheck = false;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Enables the “changeset evolution” feature of Mercurial core";
     homepage = "https://www.mercurial-scm.org/doc/evolution/";
     maintainers = with maintainers; [ xavierzwirtz ];
-    license = stdenv.lib.licenses.gpl2Plus;
+    license = licenses.gpl2Plus;
   };
 }

@@ -1,7 +1,6 @@
-{ stdenv
+{ lib
 , buildPythonPackage
 , fetchPypi
-, fetchpatch
 , dask
 , numpy, toolz # dask[array]
 , scipy
@@ -12,12 +11,12 @@
 }:
 
 buildPythonPackage rec {
-  version = "0.3.0";
+  version = "0.5.0";
   pname = "dask-image";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "15svy8y57i30878pijyd0pxn10bnk7ffmmgwva5rpip4b7grsgv0";
+    sha256 = "0bf7ea8dcd9d795505b498bd632394720c048f50761e23c574d9a6bacfb27cbb";
   };
 
   nativeBuildInputs = [ pytest-flake8 ];
@@ -38,8 +37,9 @@ buildPythonPackage rec {
   checkPhase = ''
     pytest --ignore=tests/test_dask_image/
   '';
+  pythonImportsCheck = [ "dask_image" ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://github.com/dask/dask-image";
     description = "Distributed image processing";
     license = licenses.bsdOriginal;

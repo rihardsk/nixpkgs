@@ -2,7 +2,7 @@
 , lib
 , fetchFromGitHub
 , cmake
-, pkgconfig
+, pkg-config
 , openssl
 , curl
 , libevent
@@ -12,7 +12,7 @@
 , pcre
   # Build options
 , enableGTK3 ? false
-, gnome3
+, gtk3
 , xorg
 , wrapGAppsHook
 , enableQt ? false
@@ -20,6 +20,7 @@
 , enableSystemd ? stdenv.isLinux
 , enableDaemon ? true
 , enableCli ? true
+, installLib ? false
 }:
 
 let
@@ -47,10 +48,11 @@ in stdenv.mkDerivation {
       "-DENABLE_QT=${mkFlag enableQt}"
       "-DENABLE_DAEMON=${mkFlag enableDaemon}"
       "-DENABLE_CLI=${mkFlag enableCli}"
+      "-DINSTALL_LIB=${mkFlag installLib}"
     ];
 
   nativeBuildInputs = [
-    pkgconfig
+    pkg-config
     cmake
   ]
   ++ lib.optionals enableGTK3 [ wrapGAppsHook ]
@@ -65,7 +67,7 @@ in stdenv.mkDerivation {
     pcre
   ]
   ++ lib.optionals enableQt [ qt5.qttools qt5.qtbase ]
-  ++ lib.optionals enableGTK3 [ gnome3.gtk xorg.libpthreadstubs ]
+  ++ lib.optionals enableGTK3 [ gtk3 xorg.libpthreadstubs ]
   ++ lib.optionals enableSystemd [ systemd ]
   ++ lib.optionals stdenv.isLinux [ inotify-tools ]
   ;

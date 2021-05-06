@@ -1,20 +1,20 @@
-{ stdenv, fetchPypi, buildPythonPackage, pip, pytest, click, six
+{ lib, fetchPypi, buildPythonPackage, pip, pytest, click, six
 , setuptools_scm, git, glibcLocales, mock }:
 
 buildPythonPackage rec {
   pname = "pip-tools";
-  version = "5.3.1";
+  version = "6.0.1";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "5672c2b6ca0f1fd803f3b45568c2cf7fadf135b4971e7d665232b2075544c0ef";
+    sha256 = "3b0c7b95e8d3dfb011bb42cb38f356fcf5d0630480462b59c4d0a112b8d90281";
   };
 
   LC_ALL = "en_US.UTF-8";
   checkInputs = [ pytest git glibcLocales mock ];
   propagatedBuildInputs = [ pip click six setuptools_scm ];
 
-  disabledTests = stdenv.lib.concatMapStringsSep " and " (s: "not " + s) [
+  disabledTests = lib.concatMapStringsSep " and " (s: "not " + s) [
     # Depend on network tests:
     "test_allow_unsafe_option" #paramaterized, but all fail
     "test_annotate_option" #paramaterized, but all fail
@@ -42,7 +42,7 @@ buildPythonPackage rec {
     py.test -k "${disabledTests}"
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Keeps your pinned dependencies fresh";
     homepage = "https://github.com/jazzband/pip-tools/";
     license = licenses.bsd3;

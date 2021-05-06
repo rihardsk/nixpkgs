@@ -1,18 +1,18 @@
-{ stdenv, fetchurl, glib, gtk3, meson, ninja, pkgconfig, gnome3, gettext, itstool, libxml2, libarchive
+{ lib, stdenv, fetchurl, glib, gtk3, meson, ninja, pkg-config, gnome3, gettext, itstool, libxml2, libarchive
 , file, json-glib, python3, wrapGAppsHook, desktop-file-utils, libnotify, nautilus, glibcLocales }:
 
 stdenv.mkDerivation rec {
   pname = "file-roller";
-  version = "3.36.3";
+  version = "3.38.1";
 
   src = fetchurl {
-    url = "mirror://gnome/sources/${pname}/${stdenv.lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
-    sha256 = "1dw1vfnfc44k57b6mip8fv565d2xv5wrigi4js044x3sbl5f2n89";
+    url = "mirror://gnome/sources/${pname}/${lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
+    sha256 = "0mxwdbfqizakxq65fa8zlvjf48v5f44lv8ckjw8sl8fk2871784l";
   };
 
   LANG = "en_US.UTF-8"; # postinstall.py
 
-  nativeBuildInputs = [ meson ninja gettext itstool pkgconfig libxml2 python3 wrapGAppsHook glibcLocales desktop-file-utils ];
+  nativeBuildInputs = [ meson ninja gettext itstool pkg-config libxml2 python3 wrapGAppsHook glibcLocales desktop-file-utils ];
 
   buildInputs = [ glib gtk3 json-glib libarchive file gnome3.adwaita-icon-theme libnotify nautilus ];
 
@@ -31,7 +31,7 @@ stdenv.mkDerivation rec {
     };
   };
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://wiki.gnome.org/Apps/FileRoller";
     description = "Archive manager for the GNOME desktop environment";
     license = licenses.gpl2Plus;

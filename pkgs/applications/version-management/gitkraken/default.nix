@@ -1,4 +1,4 @@
-{ stdenv, libXcomposite, libgnome-keyring, makeWrapper, udev, curl, alsaLib
+{ lib, stdenv, libXcomposite, libgnome-keyring, makeWrapper, udev, curl, alsaLib
 , libXfixes, atk, gtk3, libXrender, pango, gnome3, cairo, freetype, fontconfig
 , libX11, libXi, libxcb, libXext, libXcursor, glib, libXScrnSaver, libxkbfile, libXtst
 , nss, nspr, cups, fetchzip, expat, gdk-pixbuf, libXdamage, libXrandr, dbus
@@ -6,18 +6,18 @@
 , e2fsprogs, krb5, libdrm, mesa
 }:
 
-with stdenv.lib;
+with lib;
 
 let
   curlWithGnuTls = curl.override { gnutlsSupport = true; sslSupport = false; };
 in
 stdenv.mkDerivation rec {
   pname = "gitkraken";
-  version = "7.3.2";
+  version = "7.5.5";
 
   src = fetchzip {
     url = "https://release.axocdn.com/linux/GitKraken-v${version}.tar.gz";
-    sha256 = "0bw75m87qbnnn1gjphik3xcjx2zwczsa37rpr16la1zjhqjl5m7j";
+    sha256 = "0l40ap0ck2ywjarmn7lmpw4qbsdkx717d9kmx67p4qlmbwpimqhg";
   };
 
   dontBuild = true;
@@ -66,7 +66,7 @@ stdenv.mkDerivation rec {
   ];
 
   desktopItem = makeDesktopItem {
-    name = "gitkraken";
+    name = pname;
     exec = "gitkraken";
     icon = "gitkraken";
     desktopName = "GitKraken";
@@ -88,10 +88,7 @@ stdenv.mkDerivation rec {
     ln -s $out/share/gitkraken/gitkraken $out/bin/gitkraken
 
     mkdir -p $out/share/applications
-    cp ${desktopItem}/share/applications/* $out/share/applications/
-
-    substituteInPlace $out/share/applications/gitkraken.desktop \
-      --replace $out/usr/share/gitkraken $out/bin
+    ln -s ${desktopItem}/share/applications/* $out/share/applications
 
     mkdir -p $out/share/pixmaps
     cp gitkraken.png $out/share/pixmaps/gitkraken.png

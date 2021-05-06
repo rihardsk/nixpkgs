@@ -3,21 +3,23 @@
 , makeWrapper
 , socat
 , iptables
-, iproute
+, iproute2
 , bridge-utils
 , conntrack-tools
 , buildGoPackage
 , git
 , runc
+, kmod
 , libseccomp
-, pkgconfig
+, pkg-config
 , ethtool
-, utillinux
+, util-linux
 , ipset
 , fetchFromGitHub
 , fetchurl
 , fetchzip
 , fetchgit
+, zstd
 }:
 
 with lib;
@@ -42,9 +44,9 @@ with lib;
 # Those pieces of software we entirely ignore upstream's handling of, and just
 # make sure they're in the path if desired.
 let
-  k3sVersion = "1.18.8+k3s1";     # k3s git tag
+  k3sVersion = "1.20.6+k3s1";     # k3s git tag
   traefikChartVersion = "1.81.0"; # taken from ./scripts/download at the above k3s tag
-  k3sRootVersion = "0.4.1";       # taken from ./scripts/download at the above k3s tag
+  k3sRootVersion = "0.8.1";       # taken from ./scripts/download at the above k3s tag
   k3sCNIVersion = "0.8.6-k3s1";   # taken from ./scripts/version.sh at the above k3s tag
   # bundled into the k3s binary
   traefikChart = fetchurl {
@@ -62,8 +64,8 @@ let
   # k3s binary.
   k3sRoot = fetchzip {
     # Note: marked as apache 2.0 license
-    url = "https://github.com/rancher/k3s-root/releases/download/v${k3sRootVersion}/k3s-root-amd64.tar";
-    sha256 = "0ppj8y9g410hn6mjkfgfsi2j9yv7rcpic21znpmbrkx8b2070hf0";
+    url = "https://github.com/k3s-io/k3s-root/releases/download/v${k3sRootVersion}/k3s-root-amd64.tar";
+    sha256 = "sha256-r3Nkzl9ccry7cgD3YWlHvEWOsWnnFGIkyRH9sx12gks=";
     stripRoot = false;
   };
   k3sPlugins = buildGoPackage rec {
@@ -77,7 +79,7 @@ let
       owner = "rancher";
       repo = "plugins";
       rev = "v${version}";
-      sha256 = "13kx9msn5y9rw8v1p717wx0wbjqln59g6y3qfb1760aiwknva35q";
+      sha256 = "sha256-uAy17eRRAXPCcnh481KxFMvFQecnnBs24jn5YnVNfY4=";
     };
 
     meta = {
@@ -91,10 +93,10 @@ let
   # Grab this separately from a build because it's used by both stages of the
   # k3s build.
   k3sRepo = fetchgit {
-    url = "https://github.com/rancher/k3s";
+    url = "https://github.com/k3s-io/k3s";
     rev = "v${k3sVersion}";
     leaveDotGit = true; # ./scripts/version.sh depends on git
-    sha256 = "17qsvbj1lvgxqdkxayyqnjwsjs3cx06nfv2hqvixjszn4vf30qlg";
+    sha256 = "sha256-IIZotJKQ/+WNmfcEJU5wFtZBufWjUp4MeVCRk4tSjyQ=";
   };
   # Stage 1 of the k3s build:
   # Let's talk about how k3s is structured.
@@ -119,15 +121,20 @@ let
   # with generated bindata yet.
   k3sBuildStage1 = buildGoPackage rec {
     name = "k3s-build-1";
-    version = "${k3sVersion}";
+    version = k3sVersion;
 
     goPackagePath = "github.com/rancher/k3s";
 
     src = k3sRepo;
 
-    patches = [ ./patches/0001-Use-rm-from-path-in-go-generate.patch ./patches/0002-Add-nixpkgs-patches.patch ];
+    # Patch build scripts so that we can use them.
+    # This makes things more dynamically linked (because nix can deal with
+    # dynamically linked dependencies just fine), removes the upload at the
+    # end, and skips building runc + cni, since we have our own derivations for
+    # those.
+    patches = [ ./patches/0002-Add-nixpkgs-patches.patch ];
 
-    nativeBuildInputs = [ git pkgconfig ];
+    nativeBuildInputs = [ git pkg-config ];
     buildInputs = [ libseccomp ];
 
     buildPhase = ''
@@ -150,25 +157,28 @@ let
     '';
 
     meta = {
-      description = "The various binaries that get packaged into the final k3s binary.";
+      description = "The various binaries that get packaged into the final k3s binary";
       license = licenses.asl20;
       homepage = "https://k3s.io";
       maintainers = [ maintainers.euank ];
       platforms = platforms.linux;
     };
   };
-  k3sBuild = buildGoPackage rec {
-    name = "k3s-build";
-    version = "${k3sVersion}";
+  k3sBin = buildGoPackage rec {
+    name = "k3s-bin";
+    version = k3sVersion;
 
     goPackagePath = "github.com/rancher/k3s";
 
     src = k3sRepo;
 
-    patches = [ ./patches/0001-Use-rm-from-path-in-go-generate.patch ./patches/0002-Add-nixpkgs-patches.patch ];
+    # See the above comment in k3sBuildStage1
+    patches = [ ./patches/0002-Add-nixpkgs-patches.patch ];
 
-    nativeBuildInputs = [ git pkgconfig ];
-    buildInputs = [ k3sBuildStage1 k3sPlugins runc ];
+    nativeBuildInputs = [ git pkg-config zstd ];
+    # These dependencies are embedded as compressed files in k3s at runtime.
+    # Propagate them to avoid broken runtime references to libraries.
+    propagatedBuildInputs = [ k3sPlugins k3sBuildStage1 runc ];
 
     # k3s appends a suffix to the final distribution binary for some arches
     archSuffix =
@@ -211,7 +221,7 @@ let
     '';
 
     meta = {
-      description = "The k3s go binary which is used by the final wrapped output below.";
+      description = "The k3s go binary which is used by the final wrapped output below";
       license = licenses.asl20;
       homepage = "https://k3s.io";
       maintainers = [ maintainers.euank ];
@@ -220,26 +230,29 @@ let
   };
 in
 stdenv.mkDerivation rec {
-  name = "k3s";
+  pname = "k3s";
+  version = k3sVersion;
 
   # Important utilities used by  the kubelet, see
   # https://github.com/kubernetes/kubernetes/issues/26093#issuecomment-237202494
   # Note the list in that issue is stale and some aren't relevant for k3s.
   k3sRuntimeDeps = [
+    kmod
     socat
     iptables
-    iproute
+    iproute2
     bridge-utils
     ethtool
-    utillinux
+    util-linux # kubelet wants 'nsenter' from util-linux: https://github.com/kubernetes/kubernetes/issues/26093#issuecomment-705994388
     ipset
     conntrack-tools
   ];
 
   buildInputs = [
-    k3sBuild
-    makeWrapper
+    k3sBin
   ] ++ k3sRuntimeDeps;
+
+  nativeBuildInputs = [ makeWrapper ];
 
   unpackPhase = "true";
 
@@ -250,14 +263,16 @@ stdenv.mkDerivation rec {
   # Use a wrapper script to reference all the binaries that k3s tries to
   # execute, but that we didn't bundle with it.
   installPhase = ''
+    runHook preInstall
     mkdir -p "$out/bin"
-    makeWrapper ${k3sBuild}/bin/k3s "$out/bin/k3s" \
+    makeWrapper ${k3sBin}/bin/k3s "$out/bin/k3s" \
       --prefix PATH : ${lib.makeBinPath k3sRuntimeDeps} \
       --prefix PATH : "$out/bin"
+    runHook postInstall
   '';
 
   meta = {
-    description = "A lightweight Kubernetes distribution.";
+    description = "A lightweight Kubernetes distribution";
     license = licenses.asl20;
     homepage = "https://k3s.io";
     maintainers = [ maintainers.euank ];

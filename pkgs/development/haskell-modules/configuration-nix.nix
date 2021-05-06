@@ -94,8 +94,6 @@ self: super: builtins.intersectAttrs super {
   # Won't find it's header files without help.
   sfml-audio = appendConfigureFlag super.sfml-audio "--extra-include-dirs=${pkgs.openal}/include/AL";
 
-  # profiling is disabled to allow C++/C mess to work, which is fixed in GHC 8.8
-  cachix = disableLibraryProfiling super.cachix;
   hercules-ci-agent = disableLibraryProfiling super.hercules-ci-agent;
 
   # avoid compiling twice by providing executable as a separate output (with small closure size)
@@ -209,6 +207,7 @@ self: super: builtins.intersectAttrs super {
   network-transport-tcp = dontCheck super.network-transport-tcp;
   network-transport-zeromq = dontCheck super.network-transport-zeromq; # https://github.com/tweag/network-transport-zeromq/issues/30
   pipes-mongodb = dontCheck super.pipes-mongodb;        # http://hydra.cryp.to/build/926195/log/raw
+  pixiv = dontCheck super.pixiv;
   raven-haskell = dontCheck super.raven-haskell;        # http://hydra.cryp.to/build/502053/log/raw
   riak = dontCheck super.riak;                          # http://hydra.cryp.to/build/498763/log/raw
   scotty-binding-play = dontCheck super.scotty-binding-play;
@@ -228,6 +227,7 @@ self: super: builtins.intersectAttrs super {
   http-client-tls = dontCheck super.http-client-tls;
   http-conduit = dontCheck super.http-conduit;
   transient-universe = dontCheck super.transient-universe;
+  telegraph = dontCheck super.telegraph;
   typed-process = dontCheck super.typed-process;
   js-jquery = dontCheck super.js-jquery;
   hPDB-examples = dontCheck super.hPDB-examples;
@@ -445,9 +445,7 @@ self: super: builtins.intersectAttrs super {
 
   # requires an X11 display in test suite
   gi-gtk-declarative = dontCheck super.gi-gtk-declarative;
-
-  # depends on 'hie' executable
-  lsp-test = dontCheck super.lsp-test;
+  gi-gtk-declarative-app-simple = dontCheck super.gi-gtk-declarative-app-simple;
 
   # tests depend on executable
   ghcide = overrideCabal super.ghcide (drv: {
@@ -502,7 +500,7 @@ self: super: builtins.intersectAttrs super {
   # requires autotools to build
   secp256k1 = addBuildTools super.secp256k1 [ pkgs.buildPackages.autoconf pkgs.buildPackages.automake pkgs.buildPackages.libtool ];
 
-  # requires libsecp256k1 in pkgconfig-depends
+  # requires libsecp256k1 in pkg-config-depends
   secp256k1-haskell = addPkgconfigDepend super.secp256k1-haskell pkgs.secp256k1;
 
   # tests require git and zsh
@@ -548,6 +546,12 @@ self: super: builtins.intersectAttrs super {
 
   # Break infinite recursion cycle between devtools and mprelude.
   devtools = super.devtools.override { mprelude = dontCheck super.mprelude; };
+
+  # Break dependency cycle between tasty-hedgehog and tasty-expected-failure
+  tasty-hedgehog = dontCheck super.tasty-hedgehog;
+
+  # Break dependency cycle between hedgehog, tasty-hedgehog and lifted-async
+  lifted-async = dontCheck super.lifted-async;
 
   # loc and loc-test depend on each other for testing. Break that infinite cycle:
   loc-test = super.loc-test.override { loc = dontCheck self.loc; };
@@ -606,12 +610,12 @@ self: super: builtins.intersectAttrs super {
 
   git-annex = with pkgs;
     if (!stdenv.isLinux) then
-      let path = stdenv.lib.makeBinPath [ coreutils ];
+      let path = lib.makeBinPath [ coreutils ];
       in overrideCabal (addBuildTool super.git-annex makeWrapper) (_drv: {
         # This is an instance of https://github.com/NixOS/nix/pull/1085
         # Fails with:
         #   gpg: can't connect to the agent: File name too long
-        postPatch = stdenv.lib.optionalString stdenv.isDarwin ''
+        postPatch = lib.optionalString stdenv.isDarwin ''
           substituteInPlace Test.hs \
             --replace ', testCase "crypto" test_crypto' ""
         '';
@@ -653,29 +657,28 @@ self: super: builtins.intersectAttrs super {
 
   spago =
     let
-      # Spago needs a small patch to work with the latest versions of rio.
-      # https://github.com/purescript/spago/pull/647
-      spagoWithPatches = appendPatch super.spago (pkgs.fetchpatch {
-        url = "https://github.com/purescript/spago/pull/647/commits/917ee541a966db74f0f5d11f2f86df0030c35dd7.patch";
-        sha256 = "1nspqgcjk6z90cl9zhard0rn2q979kplcqz72x8xv5mh57zabk0w";
-      });
-
       # spago requires an older version of megaparsec, but it appears to work
       # fine with newer versions.
-      spagoWithOverrides = doJailbreak spagoWithPatches;
+      spagoWithOverrides = doJailbreak super.spago;
 
-      # This defines the version of the purescript-docs-search release we are using.
-      # This is defined in the src/Spago/Prelude.hs file in the spago source.
-      docsSearchVersion = "v0.0.10";
-
-      docsSearchAppJsFile = pkgs.fetchurl {
-        url = "https://github.com/spacchetti/purescript-docs-search/releases/download/${docsSearchVersion}/docs-search-app.js";
+      docsSearchApp_0_0_10 = pkgs.fetchurl {
+        url = "https://github.com/purescript/purescript-docs-search/releases/download/v0.0.10/docs-search-app.js";
         sha256 = "0m5ah29x290r0zk19hx2wix2djy7bs4plh9kvjz6bs9r45x25pa5";
       };
 
-      purescriptDocsSearchFile = pkgs.fetchurl {
-        url = "https://github.com/spacchetti/purescript-docs-search/releases/download/${docsSearchVersion}/purescript-docs-search";
+      docsSearchApp_0_0_11 = pkgs.fetchurl {
+        url = "https://github.com/purescript/purescript-docs-search/releases/download/v0.0.11/docs-search-app.js";
+        sha256 = "17qngsdxfg96cka1cgrl3zdrpal8ll6vyhhnazqm4hwj16ywjm02";
+      };
+
+      purescriptDocsSearch_0_0_10 = pkgs.fetchurl {
+        url = "https://github.com/purescript/purescript-docs-search/releases/download/v0.0.10/purescript-docs-search";
         sha256 = "0wc1zyhli4m2yykc6i0crm048gyizxh7b81n8xc4yb7ibjqwhyj3";
+      };
+
+      purescriptDocsSearch_0_0_11 = pkgs.fetchurl {
+        url = "https://github.com/purescript/purescript-docs-search/releases/download/v0.0.11/purescript-docs-search";
+        sha256 = "1hjdprm990vyxz86fgq14ajn0lkams7i00h8k2i2g1a0hjdwppq6";
       };
 
       spagoFixHpack = overrideCabal spagoWithOverrides (drv: {
@@ -698,13 +701,19 @@ self: super: builtins.intersectAttrs super {
           # However, they are not actually available in the spago source, so they
           # need to fetched with nix and put in the correct place.
           # https://github.com/spacchetti/spago/issues/510
-          cp ${docsSearchAppJsFile} "$sourceRoot/templates/docs-search-app.js"
-          cp ${purescriptDocsSearchFile} "$sourceRoot/templates/purescript-docs-search"
+          cp ${docsSearchApp_0_0_10} "$sourceRoot/templates/docs-search-app-0.0.10.js"
+          cp ${docsSearchApp_0_0_11} "$sourceRoot/templates/docs-search-app-0.0.11.js"
+          cp ${purescriptDocsSearch_0_0_10} "$sourceRoot/templates/purescript-docs-search-0.0.10"
+          cp ${purescriptDocsSearch_0_0_11} "$sourceRoot/templates/purescript-docs-search-0.0.11"
 
           # For some weird reason, on Darwin, the open(2) call to embed these files
           # requires write permissions. The easiest resolution is just to permit that
           # (doesn't cause any harm on other systems).
-          chmod u+w "$sourceRoot/templates/docs-search-app.js" "$sourceRoot/templates/purescript-docs-search"
+          chmod u+w \
+            "$sourceRoot/templates/docs-search-app-0.0.10.js" \
+            "$sourceRoot/templates/purescript-docs-search-0.0.10" \
+            "$sourceRoot/templates/docs-search-app-0.0.11.js" \
+            "$sourceRoot/templates/purescript-docs-search-0.0.11"
         '';
       });
 
@@ -720,7 +729,7 @@ self: super: builtins.intersectAttrs super {
 
   # mplayer-spot uses mplayer at runtime.
   mplayer-spot =
-    let path = pkgs.stdenv.lib.makeBinPath [ pkgs.mplayer ];
+    let path = pkgs.lib.makeBinPath [ pkgs.mplayer ];
     in overrideCabal (addBuildTool super.mplayer-spot pkgs.makeWrapper) (oldAttrs: {
       postInstall = ''
         wrapProgram $out/bin/mplayer-spot --prefix PATH : "${path}"
@@ -729,9 +738,10 @@ self: super: builtins.intersectAttrs super {
 
   # break infinite recursion with base-orphans
   primitive = dontCheck super.primitive;
+  primitive_0_7_1_0 = dontCheck super.primitive_0_7_1_0;
 
   cut-the-crap =
-    let path = pkgs.stdenv.lib.makeBinPath [ pkgs.ffmpeg_3 ];
+    let path = pkgs.lib.makeBinPath [ pkgs.ffmpeg_3 pkgs.youtube-dl ];
     in overrideCabal (addBuildTool super.cut-the-crap pkgs.makeWrapper) (_drv: {
       postInstall = ''
         wrapProgram $out/bin/cut-the-crap \
@@ -782,4 +792,38 @@ self: super: builtins.intersectAttrs super {
     testToolDepends = [ pkgs.git pkgs.mercurial ];
   });
 
+  nix-output-monitor = overrideCabal super.nix-output-monitor {
+    # Can't ran the golden-tests with nix, because they call nix
+    testTarget = "unit-tests";
+  };
+
+  haskell-language-server = enableCabalFlag (enableCabalFlag (overrideCabal super.haskell-language-server (drv: {
+    postInstall = let
+      inherit (pkgs.lib) concatStringsSep take splitString;
+      ghc_version = self.ghc.version;
+      ghc_major_version = concatStringsSep "." (take 2 (splitString "." ghc_version));
+    in ''
+        ln -s $out/bin/haskell-language-server $out/bin/haskell-language-server-${ghc_version}
+        ln -s $out/bin/haskell-language-server $out/bin/haskell-language-server-${ghc_major_version}
+       '';
+    testToolDepends = [ self.cabal-install pkgs.git ];
+    testTarget = "func-test"; # wrapper test accesses internet
+    preCheck = ''
+      export PATH=$PATH:$PWD/dist/build/haskell-language-server:$PWD/dist/build/haskell-language-server-wrapper
+      export HOME=$TMPDIR
+    '';
+  })) "all-plugins") "all-formatters";
+
+  # tests depend on a specific version of solc
+  hevm = dontCheck (doJailbreak super.hevm);
+
+  # hadolint enables static linking by default in the cabal file, so we have to explicitly disable it.
+  # https://github.com/hadolint/hadolint/commit/e1305042c62d52c2af4d77cdce5d62f6a0a3ce7b
+  hadolint = disableCabalFlag super.hadolint "static";
+
+  # Test suite tries to execute the build product "doctest-driver-gen", but it's not in $PATH.
+  doctest-driver-gen = dontCheck super.doctest-driver-gen;
+
+  # Tests access internet
+  prune-juice = dontCheck super.prune-juice;
 }

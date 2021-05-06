@@ -1,28 +1,29 @@
 { lib, fetchFromGitHub, stdenv, autoreconfHook
-, ncurses, IOKit, python3
+, ncurses, IOKit
 }:
 
 stdenv.mkDerivation rec {
   pname = "htop";
-  version = "3.0.1";
+  version = "3.0.5";
 
   src = fetchFromGitHub {
     owner = "htop-dev";
     repo = pname;
     rev = version;
-    sha256 = "0kjlphdvwwbj91kk91s4ksc954d3c2bznddzx2223jmb1bn9rcsa";
+    sha256 = "sha256-9zecDd3oZ24RyOLnKdJmR29Chx6S24Kvuf/F7RYzl4I=";
   };
 
-  nativeBuildInputs = [ autoreconfHook python3 ];
+  nativeBuildInputs = [ autoreconfHook ];
 
   buildInputs = [ ncurses
   ] ++ lib.optionals stdenv.isDarwin [ IOKit ];
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "An interactive process viewer for Linux";
-    homepage = "https://hisham.hm/htop/";
-    license = licenses.gpl2Plus;
-    platforms = with platforms; linux ++ freebsd ++ openbsd ++ darwin;
+    homepage = "https://htop.dev";
+    license = licenses.gpl2Only;
+    platforms = platforms.all;
     maintainers = with maintainers; [ rob relrod ];
+    changelog = "https://github.com/htop-dev/${pname}/blob/${version}/ChangeLog";
   };
 }

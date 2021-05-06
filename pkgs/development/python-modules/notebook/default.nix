@@ -12,7 +12,6 @@
 , tornado
 , ipython_genutils
 , traitlets
-, jupyter
 , jupyter_core
 , jupyter_client
 , nbformat
@@ -28,12 +27,12 @@
 
 buildPythonPackage rec {
   pname = "notebook";
-  version = "6.1.3";
+  version = "6.3.0";
   disabled = !isPy3k;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "9990d51b9931a31e681635899aeb198b4c4b41586a9e87fbfaaed1a71d0a05b6";
+    sha256 = "cbc9398d6c81473e9cdb891d2cae9c0d3718fca289dda6d26df5cb660fcadc7d";
   };
 
   LC_ALL = "en_US.utf8";
@@ -67,6 +66,11 @@ buildPythonPackage rec {
     "TestInstallServerExtension"
     "launch_socket"
     "sock_server"
+    "test_list_formats" # tries to find python MIME type
+    "KernelCullingTest" # has a race condition failing on slower hardware
+  ] ++ lib.optional stdenv.isDarwin [
+    "test_delete"
+    "test_checkpoints_follow_file"
   ];
 
   # Some of the tests use localhost networking.

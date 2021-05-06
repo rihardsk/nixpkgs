@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchCrate, rustPlatform, pkg-config, libXrandr, libX11, python3 }:
+{ lib, fetchCrate, rustPlatform, pkg-config, libXrandr, libX11, python3 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "hacksaw";
@@ -16,7 +16,7 @@ rustPlatform.buildRustPackage rec {
   cargoSha256 = "01draql3x71h7xl2xcc69dv7vpi3smnajhrvaihs5vij81pyfrzk";
 
   meta = with lib; {
-    description = "Lightweight selection tool for usage in screenshot scripts etc.";
+    description = "Lightweight selection tool for usage in screenshot scripts etc";
     homepage = "https://github.com/neXromancers/hacksaw";
     license = with licenses; [ mpl20 ];
     maintainers = with maintainers; [ TethysSvensson ];

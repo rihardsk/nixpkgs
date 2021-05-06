@@ -1,17 +1,32 @@
-{ lib, buildGoModule, fetchFromGitHub }:
+{ lib, buildGoModule, fetchFromGitHub, git }:
 
 buildGoModule rec {
   pname = "chroma";
-  version = "0.8.0";
+  version = "0.9.1";
 
   src = fetchFromGitHub {
     owner  = "alecthomas";
-    repo   = "chroma";
+    repo   = pname;
     rev    = "v${version}";
-    sha256 = "066a6rdmf670d3v5sc7chbn7db09ldgxjympb03pcqwk644dixb1";
+    sha256 = "0zzk4wcjgxa9lsx8kwpmxvcw67f2fr7ai37jxmdahnws0ai2c2f7";
+    leaveDotGit = true;
   };
 
-  vendorSha256 = "16cnc4scgkx8jan81ymha2q1kidm6hzsnip5mmgbxpqcc2h7hv9m";
+  nativeBuildInputs = [ git ];
+
+  # populate values otherwise taken care of by goreleaser
+  # https://github.com/alecthomas/chroma/issues/435
+  postPatch = ''
+    commit="$(git rev-parse HEAD)"
+    date=$(git show -s --format=%aI "$commit")
+
+    substituteInPlace cmd/chroma/main.go \
+      --replace 'version = "?"' 'version = "${version}"' \
+      --replace 'commit  = "?"' "commit = \"$commit\"" \
+      --replace 'date    = "?"' "date = \"$date\""
+  '';
+
+  vendorSha256 = "0y8mp08zccn9qxrsj9j7vambz8dwzsxbbgrlppzam53rg8rpxhrg";
 
   subPackages = [ "cmd/chroma" ];
 

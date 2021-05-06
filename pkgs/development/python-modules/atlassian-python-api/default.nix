@@ -4,6 +4,7 @@
 , isPy3k
 , certifi
 , chardet
+, deprecated
 , idna
 , oauthlib
 , requests
@@ -16,16 +17,16 @@
 
 buildPythonPackage rec {
   pname = "atlassian-python-api";
-  version = "1.16.1";
+  version = "3.8.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "b672131be7cc5e239c465909454542623c0aeb0a4d3b05e6a25ee9459959c11d";
+    sha256 = "7ef384a91a790c807336e2bd6b7554284691aadd6d7413d199baf752dd84c53e";
   };
 
   checkInputs = [ pytestrunner pytest ];
 
-  propagatedBuildInputs = [ oauthlib requests requests_oauthlib six ];
+  propagatedBuildInputs = [ deprecated oauthlib requests requests_oauthlib six ];
 
   meta = with lib; {
     description = "Python Atlassian REST API Wrapper";

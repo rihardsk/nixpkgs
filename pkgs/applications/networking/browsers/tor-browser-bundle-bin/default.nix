@@ -1,4 +1,4 @@
-{ stdenv
+{ lib, stdenv
 , fetchurl
 , makeDesktopItem
 
@@ -29,12 +29,9 @@
 
 # Media support (implies audio support)
 , mediaSupport ? true
-, ffmpeg_3
+, ffmpeg
 
 , gmp
-
-# Pluggable transport dependencies
-, python27
 
 # Wrapper runtime
 , coreutils
@@ -57,7 +54,7 @@
 , extraPrefs ? ""
 }:
 
-with stdenv.lib;
+with lib;
 
 let
   libPath = makeLibraryPath libPkgs;
@@ -84,30 +81,29 @@ let
   ]
   ++ optionals pulseaudioSupport [ libpulseaudio ]
   ++ optionals mediaSupport [
-    ffmpeg_3
+    ffmpeg
   ];
 
   # Library search path for the fte transport
   fteLibPath = makeLibraryPath [ stdenv.cc.cc gmp ];
 
   # Upstream source
-  version = "9.5.4";
+  version = "10.0.16";
 
   lang = "en-US";
 
   srcs = {
     x86_64-linux = fetchurl {
       url = "https://dist.torproject.org/torbrowser/${version}/tor-browser-linux64-${version}_${lang}.tar.xz";
-      sha256 = "sha256-XW2B2wTgqMU2w9XhPJNcUjGLrHykQIngMcG/fFTWb04=";
+      sha256 = "07h2gd6cwwq17lrwjpfah1xvr8ny8700qvi971qacrr7ssicw2pw";
     };
 
     i686-linux = fetchurl {
       url = "https://dist.torproject.org/torbrowser/${version}/tor-browser-linux32-${version}_${lang}.tar.xz";
-      sha256 = "sha256-EyDyAxB5Og1Cn04tuBF9ob8BxqULy2Ur07BuDxZlmqQ=";
+      sha256 = "145kniiby5nnd0ll3v2gggzxz52bqbrdp72hvh96i8qnzi0fq25a";
     };
   };
 in
-
 stdenv.mkDerivation rec {
   pname = "tor-browser-bundle-bin";
   inherit version;
@@ -134,7 +130,7 @@ stdenv.mkDerivation rec {
 
     # Unpack & enter
     mkdir -p "$TBB_IN_STORE"
-    tar xf "${src}" -C "$TBB_IN_STORE" --strip-components=2
+    tar xf "$src" -C "$TBB_IN_STORE" --strip-components=2
     pushd "$TBB_IN_STORE"
 
     # Set ELF interpreter
@@ -232,9 +228,10 @@ stdenv.mkDerivation rec {
 
     # Preload extensions by moving into the runtime instead of storing under the
     # user's profile directory.
-    mkdir -p "$TBB_IN_STORE/browser/extensions"
+    # See https://support.mozilla.org/en-US/kb/deploying-firefox-with-extensions
+    mkdir -p "$TBB_IN_STORE/distribution/extensions"
     mv "$TBB_IN_STORE/TorBrowser/Data/Browser/profile.default/extensions/"* \
-      "$TBB_IN_STORE/browser/extensions"
+      "$TBB_IN_STORE/distribution/extensions"
 
     # Hard-code paths to geoip data files.  TBB resolves the geoip files
     # relative to torrc-defaults_path but if we do not hard-code them
@@ -390,7 +387,7 @@ stdenv.mkDerivation rec {
       $out/bin/tor-browser --version >/dev/null
   '';
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Tor Browser Bundle built by torproject.org";
     longDescription = ''
       Tor Browser Bundle is a bundle of the Tor daemon, Tor Browser (heavily patched version of
@@ -404,7 +401,8 @@ stdenv.mkDerivation rec {
     homepage = "https://www.torproject.org/";
     changelog = "https://gitweb.torproject.org/builders/tor-browser-build.git/plain/projects/tor-browser/Bundle-Data/Docs/ChangeLog.txt?h=maint-${version}";
     platforms = attrNames srcs;
-    maintainers = with maintainers; [ offline matejc doublec thoughtpolice joachifm hax404 cap KarlJoad ];
+    maintainers = with maintainers; [ offline matejc thoughtpolice joachifm hax404 cap KarlJoad ];
+    mainProgram = "tor-browser";
     hydraPlatforms = [];
     # MPL2.0+, GPL+, &c.  While it's not entirely clear whether
     # the compound is "libre" in a strict sense (some components place certain

@@ -143,6 +143,13 @@ let
     LINUX /boot/${config.system.boot.loader.kernelFile}
     APPEND init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams} loglevel=7
     INITRD /boot/${config.system.boot.loader.initrdFile}
+
+    # A variant to boot with a serial console enabled
+    LABEL boot-serial
+    MENU LABEL NixOS ${config.system.nixos.label}${config.isoImage.appendToMenuLabel} (serial console=ttyS0,115200n8)
+    LINUX /boot/${config.system.boot.loader.kernelFile}
+    APPEND init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams} console=ttyS0,115200n8
+    INITRD /boot/${config.system.boot.loader.initrdFile}
   '';
 
   isolinuxMemtest86Entry = ''
@@ -155,12 +162,14 @@ let
   isolinuxCfg = concatStringsSep "\n"
     ([ baseIsolinuxCfg ] ++ optional config.boot.loader.grub.memtest86.enable isolinuxMemtest86Entry);
 
+  refindBinary = if targetArch == "x64" || targetArch == "aa64" then "refind_${targetArch}.efi" else null;
+
   # Setup instructions for rEFInd.
   refind =
-    if targetArch == "x64" then
+    if refindBinary != null then
       ''
       # Adds rEFInd to the ISO.
-      cp -v ${pkgs.refind}/share/refind/refind_x64.efi $out/EFI/boot/
+      cp -v ${pkgs.refind}/share/refind/${refindBinary} $out/EFI/boot/
       ''
     else
       "# No refind for ${targetArch}"
@@ -179,7 +188,10 @@ let
 
     # Fonts can be loaded?
     # (This font is assumed to always be provided as a fallback by NixOS)
-    if loadfont (hd0)/EFI/boot/unicode.pf2; then
+    if loadfont /EFI/boot/unicode.pf2; then
+      set with_fonts=true
+    fi
+    if [ "\$textmode" != "true" -a "\$with_fonts" == "true" ]; then
       # Use graphical term, it can be either with background image or a theme.
       # input is "console", while output is "gfxterm".
       # This enables "serial" input and output only when possible.
@@ -200,11 +212,11 @@ let
     ${ # When there is a theme configured, use it, otherwise use the background image.
     if config.isoImage.grubTheme != null then ''
       # Sets theme.
-      set theme=(hd0)/EFI/boot/grub-theme/theme.txt
+      set theme=/EFI/boot/grub-theme/theme.txt
       # Load theme fonts
-      $(find ${config.isoImage.grubTheme} -iname '*.pf2' -printf "loadfont (hd0)/EFI/boot/grub-theme/%P\n")
+      $(find ${config.isoImage.grubTheme} -iname '*.pf2' -printf "loadfont /EFI/boot/grub-theme/%P\n")
     '' else ''
-      if background_image (hd0)/EFI/boot/efi-background.png; then
+      if background_image /EFI/boot/efi-background.png; then
         # Black background means transparent background when there
         # is a background image set... This seems undocumented :(
         set color_normal=black/black
@@ -257,6 +269,8 @@ let
 
     cat <<EOF > $out/EFI/boot/grub.cfg
 
+    set with_fonts=false
+    set textmode=false
     # If you want to use serial for "terminal_*" commands, you need to set one up:
     #   Example manual configuration:
     #    → serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1
@@ -266,7 +280,27 @@ let
     export with_serial
     clear
     set timeout=10
+
+    # This message will only be viewable when "gfxterm" is not used.
+    echo ""
+    echo "Loading graphical boot menu..."
+    echo ""
+    echo "Press 't' to use the text boot menu on this console..."
+    echo ""
+
     ${grubMenuCfg}
+
+    hiddenentry 'Text mode' --hotkey 't' {
+      loadfont /EFI/boot/unicode.pf2
+      set textmode=true
+      terminal_output gfxterm console
+    }
+    hiddenentry 'GUI mode' --hotkey 'g' {
+      $(find ${config.isoImage.grubTheme} -iname '*.pf2' -printf "loadfont /EFI/boot/grub-theme/%P\n")
+      set textmode=false
+      terminal_output gfxterm
+    }
+
 
     # If the parameter iso_path is set, append the findiso parameter to the kernel
     # line. We need this to allow the nixos iso to be booted from grub directly.
@@ -330,11 +364,15 @@ let
       }
     }
 
-    menuentry 'rEFInd' --class refind {
-      # UUID is hard-coded in the derivation.
-      search --set=root --no-floppy --fs-uuid 1234-5678
-      chainloader (\$root)/EFI/boot/refind_x64.efi
-    }
+    ${lib.optionalString (refindBinary != null) ''
+    # GRUB apparently cannot do "chainloader" operations on "CD".
+    if [ "\$root" != "cd0" ]; then
+      menuentry 'rEFInd' --class refind {
+        # \$root defaults to the drive the EFI is found on.
+        chainloader (\$root)/EFI/boot/${refindBinary}
+      }
+    fi
+    ''}
     menuentry 'Firmware Setup' --class settings {
       fwsetup
       clear
@@ -418,7 +456,12 @@ in
     };
 
     isoImage.squashfsCompression = mkOption {
-      default = "xz -Xdict-size 100%";
+      default = with pkgs.stdenv.targetPlatform; "xz -Xdict-size 100% "
+                + lib.optionalString (isx86_32 || isx86_64) "-Xbcj x86"
+                # Untested but should also reduce size for these platforms
+                + lib.optionalString (isAarch32 || isAarch64) "-Xbcj arm"
+                + lib.optionalString (isPowerPC) "-Xbcj powerpc"
+                + lib.optionalString (isSparc) "-Xbcj sparc";
       description = ''
         Compression settings to use for the squashfs nix store.
       '';

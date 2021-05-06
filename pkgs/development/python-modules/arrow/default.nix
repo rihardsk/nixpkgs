@@ -1,4 +1,4 @@
-{ stdenv, lib, buildPythonPackage, fetchPypi, isPy27
+{ lib, buildPythonPackage, fetchPypi, isPy27
 , nose, chai, simplejson, backports_functools_lru_cache
 , python-dateutil, pytz, pytest-mock, sphinx, dateparser, pytestcov
 , pytestCheckHook
@@ -6,11 +6,11 @@
 
 buildPythonPackage rec {
   pname = "arrow";
-  version = "0.15.8";
+  version = "1.0.3";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "edc31dc051db12c95da9bac0271cd1027b8e36912daf6d4580af53b23e62721a";
+    sha256 = "399c9c8ae732270e1aa58ead835a79a40d7be8aa109c579898eb41029b5a231d";
   };
 
   propagatedBuildInputs = [ python-dateutil ]

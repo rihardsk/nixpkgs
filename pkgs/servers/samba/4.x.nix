@@ -1,7 +1,7 @@
-{ stdenv
+{ lib, stdenv
 , fetchurl
 , python
-, pkgconfig
+, pkg-config
 , bison
 , flex
 , perl
@@ -12,6 +12,7 @@
 , docbook_xml_dtd_45
 , readline
 , popt
+, dbus
 , libbsd
 , libarchive
 , zlib
@@ -24,6 +25,7 @@
 , libtasn1
 , tdb
 , cmocka
+, rpcsvc-proto
 , nixosTests
 
 , enableLDAP ? false, openldap
@@ -38,15 +40,15 @@
 , enablePam ? (!stdenv.isDarwin), pam
 }:
 
-with stdenv.lib;
+with lib;
 
 stdenv.mkDerivation rec {
   pname = "samba";
-  version = "4.12.5";
+  version = "4.13.7";
 
   src = fetchurl {
     url = "mirror://samba/pub/samba/stable/${pname}-${version}.tar.gz";
-    sha256 = "05dqj5l3spa8ggw0agxa5rf8fwgiizbmbfjms46y5jla6z31rd2l";
+    sha256 = "1ajvr5hzl9kmrf77hb9c71zvnm8j0xgy40nqfjz4f407cw470zaf";
   };
 
   outputs = [ "out" "dev" "man" ];
@@ -56,10 +58,12 @@ stdenv.mkDerivation rec {
     ./patch-source3__libads__kerberos_keytab.c.patch
     ./4.x-no-persistent-install-dynconfig.patch
     ./4.x-fix-makeflags-parsing.patch
+    # Backport, should be removed for version 4.14
+    ./0001-lib-util-Standardize-use-of-st_-acm-time-ns.patch
   ];
 
   nativeBuildInputs = [
-    pkgconfig
+    pkg-config
     bison
     flex
     perl
@@ -68,6 +72,7 @@ stdenv.mkDerivation rec {
     docbook_xsl
     docbook_xml_dtd_45
     cmocka
+    rpcsvc-proto
   ] ++ optionals stdenv.isDarwin [
     rpcgen
     fixDarwinDylibNames
@@ -77,6 +82,7 @@ stdenv.mkDerivation rec {
     python
     readline
     popt
+    dbus
     jansson
     libbsd
     libarchive
@@ -147,11 +153,13 @@ stdenv.mkDerivation rec {
     tests.samba = nixosTests.samba;
   };
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     homepage = "https://www.samba.org";
     description = "The standard Windows interoperability suite of programs for Linux and Unix";
     license = licenses.gpl3;
     platforms = platforms.unix;
+    # N.B. enableGlusterFS does not build
+    broken = stdenv.isDarwin || enableGlusterFS;
     maintainers = with maintainers; [ aneeshusa ];
   };
 }

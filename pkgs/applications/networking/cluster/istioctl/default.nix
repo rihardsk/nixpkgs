@@ -2,15 +2,15 @@
 
 buildGoModule rec {
   pname = "istioctl";
-  version = "1.7.0";
+  version = "1.9.3";
 
   src = fetchFromGitHub {
     owner = "istio";
     repo = "istio";
     rev = version;
-    sha256 = "0541j1wdhlbm2spl1w3m0hig7lqn05xk1xws8748wfzbr8wkir31";
+    sha256 = "sha256-gCI4LRUjsE6V7fomWaQsseX1Xi2f+2ZgtvWBDarpXvw=";
   };
-  vendorSha256 = "0sz92nspfclqxnx0mf80jxqqwxanqsx9nl9hg7f9izks7jw544vx";
+  vendorSha256 = "sha256-yJHYyRPl1V1WNV0nJoR3bRTTGRTQaT/tG4TSQeL5U88=";
 
   doCheck = false;
 

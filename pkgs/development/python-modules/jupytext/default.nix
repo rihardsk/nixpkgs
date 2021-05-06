@@ -1,23 +1,28 @@
 { lib, buildPythonPackage, fetchPypi, isPy27
-, mock
+, markdown-it-py
 , nbformat
 , pytest
 , pyyaml
+, toml
 }:
 
 buildPythonPackage rec {
   pname = "jupytext";
-  version = "1.5.2";
+  version = "1.11.0";
+
+  disabled = isPy27;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "1cebc9f5975b4c08db3de6d7d61b35f8c33a24cf2c8c04eee7b8a7aab8ddc39b";
+    sha256 = "9062d001baaa32430fbb94a2c9394ac906db0a58da94e7aa4e414b73fd7d51bc";
   };
 
   propagatedBuildInputs = [
-    pyyaml
+    markdown-it-py
     nbformat
-  ] ++ lib.optionals isPy27 [ mock ]; # why they put it in install_requires, who knows
+    pyyaml
+    toml
+  ];
 
   checkInputs = [
     pytest

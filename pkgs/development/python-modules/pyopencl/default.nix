@@ -1,4 +1,4 @@
-{ stdenv
+{ lib
 , fetchPypi
 , buildPythonPackage
 , Mako
@@ -16,7 +16,7 @@
 
 buildPythonPackage rec {
   pname = "pyopencl";
-  version = "2020.2.1";
+  version = "2021.1.4";
 
   checkInputs = [ pytest ];
   buildInputs = [ opencl-headers ocl-icd pybind11 ];
@@ -25,7 +25,7 @@ buildPythonPackage rec {
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "deb6c50f37f8f88960a943b379eca8c0a9a80634cf60e09aee691a7453ae202e";
+    sha256 = "6a9665e89c15e1c684789263bd3a632567e7c7bd25a657092df4b185b3468971";
   };
 
   # py.test is not needed during runtime, so remove it from `install_requires`
@@ -40,7 +40,7 @@ buildPythonPackage rec {
   # gcc: error: pygpu_language_opencl.cpp: No such file or directory
   doCheck = false;
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "Python wrapper for OpenCL";
     homepage = "https://github.com/pyopencl/pyopencl";
     license = licenses.mit;

@@ -1,28 +1,27 @@
-{ stdenv, fetchFromGitHub, gettext, makeWrapper, tcl, which, writeScript
-, ncurses, perl , cyrus_sasl, gss, gpgme, kerberos, libidn, libxml2, notmuch, openssl
-, lmdb, libxslt, docbook_xsl, docbook_xml_dtd_42, elinks, mailcap, runtimeShell, sqlite, zlib
-, glibcLocales
+{ lib, stdenv, fetchFromGitHub, gettext, makeWrapper, tcl, which
+, ncurses, perl , cyrus_sasl, gss, gpgme, libkrb5, libidn, libxml2, notmuch, openssl
+, lmdb, libxslt, docbook_xsl, docbook_xml_dtd_42, w3m, mailcap, sqlite, zlib
 }:
 
 stdenv.mkDerivation rec {
-  version = "20200821";
+  version = "20210205";
   pname = "neomutt";
 
   src = fetchFromGitHub {
     owner  = "neomutt";
     repo   = "neomutt";
     rev    = version;
-    sha256 = "0l66xf6qp2fdhm5h2v58bbc73pwj72c80mriqac9pfyjh5padir5";
+    sha256 = "sha256-ADg/+gmndOiuQHsncOzS5K4chthXeUFz6RRJsrZNeZY=";
   };
 
   buildInputs = [
-    cyrus_sasl gss gpgme kerberos libidn ncurses
+    cyrus_sasl gss gpgme libkrb5 libidn ncurses
     notmuch openssl perl lmdb
     mailcap sqlite
   ];
 
   nativeBuildInputs = [
-    docbook_xsl docbook_xml_dtd_42 gettext libxml2 libxslt.bin makeWrapper tcl which zlib elinks
+    docbook_xsl docbook_xml_dtd_42 gettext libxml2 libxslt.bin makeWrapper tcl which zlib w3m
   ];
 
   enableParallelBuilding = true;
@@ -93,7 +92,7 @@ stdenv.mkDerivation rec {
   checkTarget = "test";
   postCheck = "unset NEOMUTT_TEST_DIR";
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A small but very powerful text-based mail client";
     homepage    = "http://www.neomutt.org";
     license     = licenses.gpl2Plus;

@@ -2,6 +2,7 @@
 , bzip2
 , cargo
 , common-updater-scripts
+, copyDesktopItems
 , coreutils
 , curl
 , dbus
@@ -13,13 +14,15 @@
 , freetype
 , glib
 , gnugrep
+, gnupg
 , gnused
+, gpgme
 , icu
 , jemalloc
 , lib
+, libevent
 , libGL
 , libGLU
-, libevent
 , libjpeg
 , libnotify
 , libpng
@@ -32,10 +35,10 @@
 , nasm
 , nodejs
 , nspr
-, nss
+, nss_3_53
 , pango
 , perl
-, pkgconfig
+, pkg-config
 , python2
 , python3
 , runtimeShell
@@ -58,7 +61,7 @@
 , alsaSupport ? stdenv.isLinux, alsaLib
 , pulseaudioSupport ? stdenv.isLinux, libpulseaudio
 , gtk3Support ? true, gtk2, gtk3, wrapGAppsHook
-, waylandSupport ? true
+, waylandSupport ? true, libdrm
 , libxkbcommon, calendarSupport ? true
 
 # Use official trademarked branding.  Permission obtained at:
@@ -70,31 +73,33 @@ assert waylandSupport -> gtk3Support == true;
 
 stdenv.mkDerivation rec {
   pname = "thunderbird";
-  version = "78.2.2";
+  version = "78.10.1";
 
   src = fetchurl {
     url =
       "mirror://mozilla/thunderbird/releases/${version}/source/thunderbird-${version}.source.tar.xz";
     sha512 =
-      "2cbpyx9jn23kc289z8ikzx3035g5z6p076izvld50mj3kqc0v4n3igih3rv1lsdwysik8c0ax5w3pa037lnrp6ridgbnix34gxr4nw6";
+      "3dy8db83sw7kvv0pqqzrnidpa0s6j4vl32f08pgka68pgaldxbr9ay4m1amvjafykz4mpk161v35g4dzb1xf7sxdfl38621yayf9ypz";
   };
 
   nativeBuildInputs = [
     autoconf213
     cargo
+    copyDesktopItems
     gnused
     llvmPackages.llvm
     m4
     nasm
     nodejs
     perl
-    pkgconfig
+    pkg-config
     python2
     python3
     rust-cbindgen
     rustc
     which
     yasm
+    unzip
   ] ++ lib.optional gtk3Support wrapGAppsHook;
 
   buildInputs = [
@@ -118,11 +123,10 @@ stdenv.mkDerivation rec {
     libvpx
     libwebp
     nspr
-    nss
+    nss_3_53
     pango
     perl
     sqlite
-    unzip
     xorg.libX11
     xorg.libXScrnSaver
     xorg.libXcursor
@@ -133,27 +137,21 @@ stdenv.mkDerivation rec {
     xorg.libXt
     xorg.pixman
     xorg.xorgproto
+    xorg.libXdamage
     zip
     zlib
   ] ++ lib.optional alsaSupport alsaLib
     ++ lib.optional gtk3Support gtk3
     ++ lib.optional pulseaudioSupport libpulseaudio
-    ++ lib.optional waylandSupport libxkbcommon;
+    ++ lib.optionals waylandSupport [ libxkbcommon libdrm ];
 
   NIX_CFLAGS_COMPILE =[
     "-I${glib.dev}/include/gio-unix-2.0"
-    "-I${nss.dev}/include/nss"
+    "-I${nss_3_53.dev}/include/nss"
   ];
 
   patches = [
     ./no-buildconfig.patch
-    (fetchpatch { # included in 78.3.0
-      name = "empty-UI.patch";
-      url = "https://hg.mozilla.org/releases/comm-esr78/raw-rev/f085dbd311bc";
-      # paths: {a,b}/foo -> {a,b}/comm/foo
-      stripLen = 1; extraPrefix = "comm/";
-      sha256 = "0x9pw62w93kyd99q9wi2d8llcfzbrqib7fp5kcrjidvhnkxpr6j7";
-    })
   ];
 
   postPatch = ''
@@ -264,14 +262,14 @@ stdenv.mkDerivation rec {
 
   doCheck = false;
 
-  postInstall = let
-    desktopItem = makeDesktopItem {
+  desktopItems = [
+    (makeDesktopItem {
       categories = lib.concatStringsSep ";" [ "Application" "Network" ];
       desktopName = "Thunderbird";
       genericName = "Mail Reader";
       name = "thunderbird";
       exec = "thunderbird %U";
-      icon = "$out/lib/thunderbird/chrome/icons/default/default256.png";
+      icon = "thunderbird";
       mimeType = lib.concatStringsSep ";" [
         # Email
         "x-scheme-handler/mailto"
@@ -285,13 +283,23 @@ stdenv.mkDerivation rec {
         "x-scheme-handler/snews"
         "x-scheme-handler/nntp"
       ];
-    };
-  in ''
+    })
+  ];
+
+  postInstall = ''
     # TODO: Move to a dev output?
     rm -rf $out/include $out/lib/thunderbird-devel-* $out/share/idl
-
-    ${desktopItem.buildCommand}
+    install -Dm 444 $out/lib/thunderbird/chrome/icons/default/default256.png $out/share/icons/hicolor/256x256/apps/thunderbird.png
   '';
+
+  # Note on GPG support:
+  # Thunderbird's native GPG support does not yet support smartcards.
+  # The official upstream recommendation is to configure fall back to gnupg
+  # using the Thunderbird config `mail.openpgp.allow_external_gnupg`
+  # and GPG keys set up; instructions with pictures at:
+  # https://anweshadas.in/how-to-use-yubikey-or-any-gpg-smartcard-in-thunderbird-78/
+  # For that to work out of the box, it requires `gnupg` on PATH and
+  # `gpgme` in `LD_LIBRARY_PATH`; we do this below.
 
   preFixup = ''
     # Needed to find Mozilla runtime
@@ -302,6 +310,8 @@ stdenv.mkDerivation rec {
       --set SNAP_NAME "thunderbird"
       --set MOZ_LEGACY_PROFILES 1
       --set MOZ_ALLOW_DOWNGRADE 1
+      --prefix PATH : "${lib.getBin gnupg}/bin"
+      --prefix LD_LIBRARY_PATH : "${lib.getLib gpgme}/lib"
     )
   '';
 
@@ -328,7 +338,9 @@ stdenv.mkDerivation rec {
       gnugrep curl runtimeShell;
   };
 
-  meta = with stdenv.lib; {
+  requiredSystemFeatures = [ "big-parallel" ];
+
+  meta = with lib; {
     description = "A full-featured e-mail client";
     homepage = "https://www.thunderbird.net";
     maintainers = with maintainers; [

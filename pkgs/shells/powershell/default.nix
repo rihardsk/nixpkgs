@@ -4,8 +4,8 @@
 let platformString = if stdenv.isDarwin then "osx"
                      else if stdenv.isLinux then "linux"
                      else throw "unsupported platform";
-    platformSha = if stdenv.isDarwin then "0c71w6z6sc86si07i6vy4w3069jal7476wyiizyr7qjm9m22963f"
-                     else if stdenv.isLinux then "14d6nhv525pa8pi4p1r2mn180isfzgshqrbmql3qd55aksjpq1v0"
+    platformSha = if stdenv.isDarwin then "0w44ws8b6zfixf7xz93hmplqsx18279n9x8j77y4rbzs13fldvsn"
+                     else if stdenv.isLinux then "0xm7l49zhkz2fly3d751kjd5cy3ws9zji9i0061lkd06dvkch7jy"
                      else throw "unsupported platform";
     platformLdLibraryPath = if stdenv.isDarwin then "DYLD_FALLBACK_LIBRARY_PATH"
                      else if stdenv.isLinux then "LD_LIBRARY_PATH"
@@ -15,7 +15,7 @@ let platformString = if stdenv.isDarwin then "osx"
 in
 stdenv.mkDerivation rec {
   pname = "powershell";
-  version = "7.0.1";
+  version = "7.1.3";
 
   src = fetchzip {
     url = "https://github.com/PowerShell/PowerShell/releases/download/v${version}/powershell-${version}-${platformString}-x64.tar.gz";
@@ -47,7 +47,7 @@ stdenv.mkDerivation rec {
     mkdir -p $out/bin
 
     makeWrapper $pslibs/pwsh $out/bin/pwsh \
-      --prefix ${platformLdLibraryPath} : "${stdenv.lib.makeLibraryPath libraries}" \
+      --prefix ${platformLdLibraryPath} : "${lib.makeLibraryPath libraries}" \
       --set TERM xterm --set POWERSHELL_TELEMETRY_OPTOUT 1 --set DOTNET_CLI_TELEMETRY_OPTOUT 1
   '';
 

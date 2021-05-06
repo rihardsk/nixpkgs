@@ -58,7 +58,7 @@ in
       noDesktop = mkOption {
         type = types.bool;
         default = false;
-        description = "Don't install XFCE desktop components (xfdesktop, panel and notification daemon).";
+        description = "Don't install XFCE desktop components (xfdesktop and panel).";
       };
 
       enableXfwm = mkOption {
@@ -98,6 +98,7 @@ in
       parole
       ristretto
       xfce4-appfinder
+      xfce4-notifyd
       xfce4-screenshooter
       xfce4-session
       xfce4-settings
@@ -119,7 +120,6 @@ in
         xfwm4
         xfwm4-themes
       ] ++ optionals (!cfg.noDesktop) [
-        xfce4-notifyd
         xfce4-panel
         xfdesktop
       ];
@@ -151,7 +151,6 @@ in
     services.upower.enable = config.powerManagement.enable;
     services.gnome3.glib-networking.enable = true;
     services.gvfs.enable = true;
-    services.gvfs.package = pkgs.xfce.gvfs;
     services.tumbler.enable = true;
     services.system-config-printer.enable = (mkIf config.services.printing.enable (mkDefault true));
     services.xserver.libinput.enable = mkDefault true; # used in xfce4-settings-manager
@@ -166,7 +165,8 @@ in
     # Systemd services
     systemd.packages = with pkgs.xfce; [
       (thunar.override { thunarPlugins = cfg.thunarPlugins; })
-    ] ++ optional (!cfg.noDesktop) xfce4-notifyd;
+      xfce4-notifyd
+    ];
 
   };
 }

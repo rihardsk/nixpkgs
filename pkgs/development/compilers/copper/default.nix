@@ -1,4 +1,4 @@
-{ stdenv
+{ lib, stdenv
 , fetchurl
 , libffi
 }:
@@ -23,8 +23,8 @@ stdenv.mkDerivation rec {
   installPhase = ''
     make BACKEND=elf64 install prefix=$out
   '';
-  meta = with stdenv.lib; {
-    description = "Simple imperative language, statically typed with type inference and genericity.";
+  meta = with lib; {
+    description = "Simple imperative language, statically typed with type inference and genericity";
     homepage = "https://tibleiz.net/copper/";
     license = licenses.bsd2;
     platforms = platforms.x86_64;
