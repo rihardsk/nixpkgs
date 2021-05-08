@@ -157,7 +157,7 @@ stdenv.mkDerivation rec {
     sha256 = "1gspxw5i0axymxdjzj5rmhf10gyl2gqr666gz141nv042l9dm5vi";
   };
 
-  nativeBuildInputs = [ python3 unzip autoreconfHook ];
+  nativeBuildInputs = [ python3 unzip autoreconfHook libxml2 ];
 
   # install filters early, so their shebangs are patched too
   postPatch = with lib; ''
@@ -253,13 +253,13 @@ stdenv.mkDerivation rec {
         ${optionalString enableJava ''-e "s|^FOP =.*|FOP = '${fop}/bin/fop'|"''} \
         -e "s|^W3M =.*|W3M = '${w3m}/bin/w3m'|" \
         -e "s|^LYNX =.*|LYNX = '${lynx}/bin/lynx'|" \
-        -e "s|^XMLLINT =.*|XMLLINT = '${libxml2.bin}/bin/xmllint'|" \
+        -e "s|^XMLLINT =.*|XMLLINT = 'xmllint'|" \
         -e "s|^EPUBCHECK =.*|EPUBCHECK = 'nixpkgs_is_missing_epubcheck'|" \
         -i a2x.py
   '' else ''
     sed -e "s|^ENV =.*|ENV = dict(XML_CATALOG_FILES='${docbook_xml_dtd_45}/xml/dtd/docbook/catalog.xml ${docbook_xsl_ns}/xml/xsl/docbook/catalog.xml ${docbook_xsl}/xml/xsl/docbook/catalog.xml')|" \
         -e "s|^XSLTPROC =.*|XSLTPROC = '${libxslt.bin}/bin/xsltproc'|" \
-        -e "s|^XMLLINT =.*|XMLLINT = '${libxml2.bin}/bin/xmllint'|" \
+        -e "s|^XMLLINT =.*|XMLLINT = 'xmllint'|" \
         -i a2x.py
   '') + ''
     patchShebangs .
